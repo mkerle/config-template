@@ -20,7 +20,7 @@ class GenericTemplateSourceCache(AbstractTemplateSourceCache):
         else:
             raise Exception('Duplicate cache key found for template')
         
-    def get(self, templateName : str, templateVersion : int) -> AbstractConfigTemplate:
+    def get(self, templateName : str, templateVersion : int) -> any:
 
         cacheKey = self._getCacheKey(templateName, templateVersion)
         if (cacheKey in self.cache):

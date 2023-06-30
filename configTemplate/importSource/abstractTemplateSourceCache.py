@@ -1,7 +1,5 @@
 from abc import ABC, classmethod, abstractmethod
 
-from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
-
 class AbstractTemplateSourceCache(ABC):
 
     def __init__(self):
@@ -22,7 +20,7 @@ class AbstractTemplateSourceCache(ABC):
         raise NotImplementedError()
     
     @abstractmethod
-    def get(self, templateName : str, templateVersion : int) -> AbstractConfigTemplate:
+    def get(self, templateName : str, templateVersion : int) -> any:
 
         raise NotImplementedError()
 

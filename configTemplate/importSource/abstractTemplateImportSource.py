@@ -17,9 +17,9 @@ class AbstractTemplateImportSource(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def hasTemplate(self, templateName : str, version : int) -> bool:
+    def hasTemplate(self, templateName : str, templateVersion : int) -> bool:
         raise NotImplementedError()
     
     @abstractmethod
-    def getTemplate(self, templateName : str, version : int) -> AbstractConfigTemplate:
+    def getTemplate(self, templateName : str, templateVersion : int) -> AbstractConfigTemplate:
         raise NotImplementedError()

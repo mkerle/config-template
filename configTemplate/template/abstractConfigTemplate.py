@@ -12,6 +12,10 @@ class AbstractConfigTemplate(ABC):
     @abstractmethod
     def getTemplateVersion(self) -> int:
         raise NotImplementedError()
+    
+    @abstractmethod
+    def isValidTemplate(self) -> bool:
+        raise NotImplementedError()
 
     
 
