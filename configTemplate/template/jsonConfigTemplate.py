@@ -9,18 +9,17 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
     def __init__(self, templateData : dict = None):
         super().__init__(templateData)
-
-        if (templateData is not None):
-            self.templateObj = templateData
-        else:
-            self.setTemplateData(templateData)
+        
+        self.setTemplateData(templateData)
 
     def setTemplateData(self, templateData: dict):
         
-        if (JSONConfigTemplate.isValidTemplate(templateData)):
+        if (templateData is None):
+            self.templateObj = None
+        elif (JSONConfigTemplate.isValidTemplateData(templateData)):
             self.templateObj = templateData
-
-        raise Exception('JSON Template is not valid')
+        else:
+            raise Exception('JSON Template is not valid')
     
     def _templateObjIsDict(templateObj : dict) -> bool:
 
@@ -102,8 +101,12 @@ class JSONConfigTemplate(AbstractConfigTemplate):
     
     def getTemplateInheritedTemplates(self) -> list:
         return JSONConfigTemplate._getTemplateInheritedTemplates(self.templateObj)
+    
+    def isValidTemplate(self) -> bool:
+        return JSONConfigTemplate.isValidTemplateData(self.templateObj)
 
-    def isValidTemplate(templateData: dict) -> bool:
+    @staticmethod
+    def isValidTemplateData(templateData: dict) -> bool:
         
         try:
             if (not JSONConfigTemplate._templateObjIsDict(templateData)):

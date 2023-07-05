@@ -1,13 +1,11 @@
-from abc import abc, classmethod, abstractmethod
+from abc import ABC, abstractmethod
 
 from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
 
-class AbstractConfigTemplateFactory(abc):
+class AbstractConfigTemplateFactory(ABC):
 
-    @abstractmethod
-    def createTemplateFromObject(obj : any) -> AbstractConfigTemplate:
+    @staticmethod
+    @abstractmethod    
+    def createTemplate(*args, **kwargs) -> AbstractConfigTemplate:
         raise NotImplementedError()
     
-    @abstractmethod
-    def createTemplateFromFile(filePath : str) -> AbstractConfigTemplate:
-        raise NotImplementedError()

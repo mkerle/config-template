@@ -22,7 +22,8 @@ class AbstractConfigTemplate(ABC):
         raise NotImplementedError()
     
     @staticmethod
-    def isValidTemplate(templateData : any) -> bool:
+    @abstractmethod
+    def isValidTemplateData(templateData : any) -> bool:
         raise NotImplementedError
 
     

@@ -8,7 +8,7 @@ class testJSONTemplate(TestCase):
 
     def testValidJSONTemplate(self):
 
-        result = JSONConfigTemplate.isValidTemplate(baseTemplateTest.templateObj)
+        result = JSONConfigTemplate.isValidTemplateData(baseTemplateTest.templateObj)
         self.assertTrue(result, 'isValidTemplate() returned False')
 
     def testCreateSimpleJSONTemplate(self):
@@ -27,21 +27,23 @@ class testJSONTemplate(TestCase):
 
     def testValidateJSONTemplate(self):
 
-        self.assertFalse(JSONConfigTemplate.isValidTemplate([]), 'isValidTemplate() returned true for non dict template object')
+        self.assertFalse(JSONConfigTemplate.isValidTemplateData(None), 'isValidTemplate() returned true for None type template object')
 
-        self.assertFalse(JSONConfigTemplate.isValidTemplate({}), 'isValidTemplate() returned True for empty dict template object')
+        self.assertFalse(JSONConfigTemplate.isValidTemplateData([]), 'isValidTemplate() returned true for non dict template object')
+
+        self.assertFalse(JSONConfigTemplate.isValidTemplateData({}), 'isValidTemplate() returned True for empty dict template object')
 
         templateObj = {'name' : 'Test'}
-        self.assertFalse(JSONConfigTemplate.isValidTemplate(templateObj), 'isValidTemplate() returned true for template object missing version and template')
+        self.assertFalse(JSONConfigTemplate.isValidTemplateData(templateObj), 'isValidTemplate() returned true for template object missing version and template')
 
         templateObj['version'] = 1
-        self.assertFalse(JSONConfigTemplate.isValidTemplate(templateObj), 'isValidTemplate() returned true for template object missing template')
+        self.assertFalse(JSONConfigTemplate.isValidTemplateData(templateObj), 'isValidTemplate() returned true for template object missing template')
 
         templateObj['template'] = []
-        self.assertFalse(JSONConfigTemplate.isValidTemplate(templateObj), 'isValidTemplate() returned true for template object with invalid template data type')
+        self.assertFalse(JSONConfigTemplate.isValidTemplateData(templateObj), 'isValidTemplate() returned true for template object with invalid template data type')
 
         templateObj['template'] = {}
-        self.assertTrue(JSONConfigTemplate.isValidTemplate(templateObj), 'isValidTemplate() returned false for valid template structure')
+        self.assertTrue(JSONConfigTemplate.isValidTemplateData(templateObj), 'isValidTemplate() returned false for valid template structure')
 
     def testInheritedTemplates(self):
 
@@ -56,13 +58,13 @@ class testJSONTemplate(TestCase):
 
         templateObj['inherit-templates'] = {}
 
-        self.assertRaises(Exception, JSONConfigTemplate.isValidTemplate(templateObj), 'isValidTemplate() failed to raise exception for invalid type for inherit-templates')
+        self.assertRaises(Exception, JSONConfigTemplate.isValidTemplateData(templateObj), 'isValidTemplate() failed to raise exception for invalid type for inherit-templates')
 
         template = JSONConfigTemplate(templateObj)
         self.assertRaises(Exception, template.getTemplateInheritedTemplates(), 'getTemplateInheritedTemplates() did not raise an exception for invalid inherit-templates type')
 
         templateObj['inherit-templates'] = []
 
-        self.assertTrue(JSONConfigTemplate.isValidTemplate(templateObj), 'isValidTemplate() returned False for a valid template structure')
+        self.assertTrue(JSONConfigTemplate.isValidTemplateData(templateObj), 'isValidTemplate() returned False for a valid template structure')
 
 

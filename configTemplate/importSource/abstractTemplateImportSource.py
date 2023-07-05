@@ -1,4 +1,4 @@
-from abc import ABC, classmethod, abstractmethod
+from abc import ABC, abstractmethod
 
 from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
 from configTemplate.importSource.abstractTemplateSourceCache import AbstractTemplateSourceCache

@@ -1,4 +1,4 @@
-from abc import ABC, classmethod, abstractmethod
+from abc import ABC, abstractmethod
 
 class AbstractTemplateSourceCache(ABC):
 
