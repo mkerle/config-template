@@ -9,18 +9,11 @@ class AbstractTemplateSourceCache(ABC):
     def clearCache(self):
         self.cache = {}
 
-    @abstractmethod
-    def _getCacheKey(self, templateName : str, templateVersion : int) -> str:
+    def add(self, k : str, obj : any = None):
 
-        raise NotImplementedError()
-
-    @abstractmethod
-    def add(self, templateName : str, templateVersion : int, obj : any = None):
-
-        raise NotImplementedError()
+        self.cache[k] = obj
     
-    @abstractmethod
-    def get(self, templateName : str, templateVersion : int) -> any:
-
-        raise NotImplementedError()
+    def get(self, k : str) -> any:
+    
+        return self.cache.get(k, None)
 

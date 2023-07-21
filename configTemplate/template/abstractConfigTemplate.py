@@ -1,51 +1,27 @@
 from abc import ABC, abstractmethod
+from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
+from configTemplate.template.abstractConfigTemplateSource import AbstractConfigTemplateSource
 
 class AbstractConfigTemplate(ABC):
 
-    def __init__(self, templateData : any = None):
+    def __init__(self, 
+                 mainTemplateSource : AbstractConfigTemplateSource = None,
+                 inheritedTemplatesSources : dict = None,
+                 templateDefinition : AbstractTemplateDefinition = AbstractTemplateDefinition()):
         
-        self._templateVariablePrefix = '$_var_'
-        self._variableStart = '{{'
-        self._variableEnd = '}}'
+        self.setTemplateDefinition(templateDefinition)
 
-    @abstractmethod
-    def setTemplateData(self, templateData : any):
-        raise NotImplementedError()
+    def setTemplateDefinition(self, templateDefinition : AbstractTemplateDefinition):
+        self._templateDefinition = templateDefinition
 
-    @abstractmethod
-    def getTemplateName(self) -> str:
-        raise NotImplementedError()
+    def getTemplateDefinition(self) -> AbstractTemplateDefinition:
+        return self._templateDefinition
     
     @abstractmethod
-    def getTemplateVersion(self) -> int:
-        raise NotImplementedError()
-    
-    @abstractmethod
-    def isValidTemplate(self) -> bool:
-        raise NotImplementedError()
-    
-    @staticmethod
-    @abstractmethod
-    def isValidTemplateData(templateData : any) -> bool:
+    def render(self, *args, **kwargs) -> any:
         raise NotImplementedError
     
-    def setTemplateVariablePrefix(self, templateVariablePrefix : str):
-        self._templateVariablePrefix = templateVariablePrefix
-
-    def getTemplateVariablePrefix(self) -> str:
-        return self._templateVariablePrefix
-
-    def setVariableStart(self, variableStart : str):
-        self._variableStart = variableStart
-
-    def getVariableStart(self) -> str:
-        return self._variableStart
-
-    def setVariableEnd(self, variableEnd : str):
-        self._variableEnd = variableEnd
-
-    def getVariableEnd(self) -> str:
-        return self._variableEnd
+    
 
 
     

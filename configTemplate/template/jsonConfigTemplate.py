@@ -1,131 +1,88 @@
 from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
+from configTemplate.template.jsonConfigTemplateSource import JSONConfigTemplateSource
+from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
+from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
+
+import copy
 
 class JSONConfigTemplate(AbstractConfigTemplate):
 
-    FIELD_TEMPLATE_NAME = 'name'
-    FIELD_TEMPLATE_VERSION = 'version'
-    FIELD_TEMPLATE_DATA = 'template'
-    FIELD_TEMPLATE_INHERIT = 'inherited-templates'
-
-    def __init__(self, templateData : dict = None):
-        super().__init__(templateData)
+    def __init__(self, 
+                 mainTemplateSource : JSONConfigTemplateSource = None,
+                 inheritedTemplatesSources : dict = None,
+                 templateDefinition : AbstractTemplateDefinition = DefaultTemplateDefinition()):
         
-        self.setTemplateData(templateData)
+        super().__init__(mainTemplateSource, inheritedTemplatesSources, templateDefinition)
 
-    def setTemplateData(self, templateData: dict):
+        self.mainTemplateSource = mainTemplateSource
+        self.inheritedTemplateSources = inheritedTemplatesSources
+
+    def _mergeDict(self, origData : dict, mergeData : dict) -> dict:
+
+        for k in mergeData:
+            if (k not in origData):
+                origData[k] = mergeData[k]
+
+            elif (type(mergeData[k]) == dict):
+                origData[k] = self._mergeDict(origData[k], mergeData[k])
+
+            elif (type(mergeData[k]) == list):
+                for listVal in mergeData[k]:
+                    if (listVal not in origData[k]):
+                        origData[k].append(listVal)
+
+        return origData
+
+    def _handleInsertBlock(self, obj : dict | list, index : str | int, *args, **kwargs):
+
+        if (type(index) == str):
+
+            if (index == self.getTemplateDefinition().getImportBlockVariableName()):
+
+                if (type(obj) == dict):
+                    if (type(obj[index]) == str):
+                        sourceTemplate = self.inheritedTemplateSources.get(obj[index], None)
+
+                        if (sourceTemplate is None):
+                            raise Exception('Unable to find source template for template. [Source Name=%s]' % (sourceTemplate))
+                        
+                        sourceBlock = copy.deepcopy(sourceTemplate.getTemplateData())
+                        self._traverseObj(sourceBlock, self._handleInsertBlock, *args, **kwargs)
+
+                        # merge the data
+                        obj = self._mergeDict(obj, sourceBlock)
+
+                    else:
+                        raise Exception('Expected str for inherited template source name!')
+                    
+                else:
+                    raise Exception('Import source blocks only supported inside a dictionary at this stage.')
+                
+        return obj
+                                
+
+    def _traverseObj(self, obj, callback, *args, **kwargs) -> any:
+
+        if (type(obj) == dict):
+
+            for k in obj:
+                if (type(obj[k]) == dict or type(obj[k]) == list):
+                    obj = self._traverseObj(obj[k], callback)
+                else:
+                    obj = callback(obj, k, *args, **kwargs)
+        elif (type(obj) == list):
+
+            for i in range(0, len(obj)):
+                if (type(obj[i]) == dict or type(obj[i]) == list):
+                    obj = self._traverseObj(obj[i], callback)
+                else:
+                    obj = callback(obj, i, *args, **kwargs)
+
+    def render(self, *args, **kwargs) -> any:
         
-        if (templateData is None):
-            self.templateObj = None
-        elif (JSONConfigTemplate.isValidTemplateData(templateData)):
-            self.templateObj = templateData
-        else:
-            raise Exception('JSON Template is not valid')
-    
-    def _templateObjIsDict(templateObj : dict) -> bool:
+        renderedTemplate = copy.deepcopy(self.mainTemplateSource.getTemplateData())
 
-        return type(templateObj == dict)
+        renderedTemplate = self._traverseObj(renderedTemplate, self._handleInsertBlock, *args, **kwargs)
 
-    def _hasTemplateName(templateObj : dict) -> bool:
+        return renderedTemplate
 
-        if (JSONConfigTemplate._templateObjIsDict(templateObj)):
-            return JSONConfigTemplate.FIELD_TEMPLATE_NAME in templateObj
-        
-        return False
-        
-    def _hasTemplateVersion(templateObj : dict) -> bool:
-
-        if (JSONConfigTemplate._templateObjIsDict(templateObj)):
-            return JSONConfigTemplate.FIELD_TEMPLATE_VERSION in templateObj
-        
-        return False
-        
-    def _hasTemplateData(templateObj : dict) -> bool:
-
-        if (JSONConfigTemplate._templateObjIsDict(templateObj)):
-            if (JSONConfigTemplate.FIELD_TEMPLATE_DATA in templateObj):
-                return type(templateObj[JSONConfigTemplate.FIELD_TEMPLATE_DATA]) == dict
-            
-        else:
-            raise Exception('Template data [%s] is not of type dict' % (JSONConfigTemplate.FIELD_TEMPLATE_DATA))
-            
-        return False
-    
-    def _hasTemplateInheritedTemplates(templateObj : dict) -> bool:
-
-        if (JSONConfigTemplate._templateObjIsDict(templateObj)):
-            if (JSONConfigTemplate.FIELD_TEMPLATE_INHERIT in templateObj):
-                return type(templateObj[JSONConfigTemplate.FIELD_TEMPLATE_INHERIT]) == list
-            
-        else:
-            raise Exception('Template field [%s] is not of type list' % (JSONConfigTemplate.FIELD_TEMPLATE_INHERIT))
-            
-        return False
-
-    def _getTemplateName(templateObj : dict) -> str:
-
-        if (JSONConfigTemplate._hasTemplateName(templateObj)):
-            return templateObj[JSONConfigTemplate.FIELD_TEMPLATE_NAME]
-        
-        raise Exception('No template name defined!')
-    
-    def _getTemplateVersion(templateObj : dict) -> int:
-
-        if (JSONConfigTemplate._hasTemplateVersion(templateObj)):
-            return templateObj[JSONConfigTemplate.FIELD_TEMPLATE_VERSION]
-        
-        raise Exception('No template version defined!')
-        
-    def _getTemplateData(templateObj : dict) -> dict:
-
-        if (JSONConfigTemplate._hasTemplateData(templateObj)):
-            return templateObj[JSONConfigTemplate.FIELD_TEMPLATE_DATA]
-        
-        raise Exception('No template data defined!')
-    
-    def _getTemplateInheritedTemplates(templateObj : dict) -> list:
-
-        if (JSONConfigTemplate._hasTemplateInheritedTemplates(templateObj)):
-            return templateObj[JSONConfigTemplate.FIELD_TEMPLATE_DATA]
-        
-        # inherited templates is optional - return empty list
-        return []
-
-    def getTemplateName(self) -> str:
-        return JSONConfigTemplate._getTemplateName(self.templateObj)
-    
-    def getTemplateVersion(self) -> int:
-        return JSONConfigTemplate._getTemplateVersion(self.templateObj)
-    
-    def getTemplateData(self) -> dict:
-        return JSONConfigTemplate._getTemplateData(self.templateObj)
-    
-    def getTemplateInheritedTemplates(self) -> list:
-        return JSONConfigTemplate._getTemplateInheritedTemplates(self.templateObj)
-    
-    def isValidTemplate(self) -> bool:
-        return JSONConfigTemplate.isValidTemplateData(self.templateObj)
-
-    @staticmethod
-    def isValidTemplateData(templateData: dict) -> bool:
-        
-        try:
-            if (not JSONConfigTemplate._templateObjIsDict(templateData)):
-                return False
-            elif (not JSONConfigTemplate._hasTemplateName(templateData)):                
-                return False
-            elif (not JSONConfigTemplate._hasTemplateVersion(templateData)):                
-                return False
-            elif (not JSONConfigTemplate._hasTemplateData(templateData)):
-                return False
-            
-            if (not JSONConfigTemplate._hasTemplateInheritedTemplates(templateData)):
-                # Inherited templates is optional - exception will be
-                # thrown if wrong type
-                pass
-                                        
-            return True
-        
-        except:
-            return False
-    
-        

@@ -1,8 +1,8 @@
 from configTemplate.importSource.abstractTemplateImportSource import AbstractTemplateImportSource
 from configTemplate.importSource.genericTemplateSourceCache import GenericTemplateSourceCache
-from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
+from configTemplate.template.abstractConfigTemplateSource import AbstractConfigTemplateSource
 
-from configTemplate.template.abstractConfigTemplateFactory import AbstractConfigTemplateFactory
+from configTemplate.template.abstractConfigTemplateSourceFactory import AbstractConfigTemplateSourceFactory
 
 import os
 import pathlib
@@ -10,35 +10,30 @@ import pathlib
 
 class DirectoryTemplateImportSource(AbstractTemplateImportSource):
 
-    def __init__(self, directoryPath : str, factoryMethod : AbstractConfigTemplateFactory):
+    def __init__(self, directoryPath : str, factoryMethod : AbstractConfigTemplateSourceFactory):
 
-        super.__init__()
-
-        self.directoryPath = directoryPath
-        self.factoryMethod = factoryMethod
+        super().__init__(directoryPath, factoryMethod)
 
         self.importSourceCache = GenericTemplateSourceCache()
 
-    def hasTemplate(self, templateName: str, templateVersion : int) -> bool:
+    def hasTemplate(self, templateName: str, *args, **kwargs) -> bool:
         
-        return self.importSourceCache.get(templateName, templateVersion) is not None
+        return self.importSourceCache.get(templateName) is not None
     
-    def _getTemplateFromFilePath(self, templateFilePath : str) -> AbstractConfigTemplate:
+    def _getTemplateFromFilePath(self, templateFilePath : str) -> AbstractConfigTemplateSource:
 
         if (os.path.exists(templateFilePath)):
 
             try:
-                return self.factoryMethod.createTemplateFromFile(templateFilePath)
+                return self.factoryMethod.createTemplateSource(templateFilePath)
             except:
                 Exception('An error occured getting template! Path: [%s]' % (templateFilePath))
-            finally:
-                return None
 
         return None
     
-    def getTemplate(self, templateName: str, templateVersion: int) -> AbstractConfigTemplate:
+    def getTemplate(self, templateName: str, *args, **kwargs) -> AbstractConfigTemplateSource:
         
-        templateFilePath = str(self.importSourceCache.get(templateName, templateVersion))
+        templateFilePath = str(self.importSourceCache.get(templateName))
 
         if (templateFilePath is not None):
             return self._getTemplateFromFilePath(templateFilePath)
@@ -47,6 +42,8 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
     
     def buildCache(self):
         
+        self.importSourceCache.clearCache()
+
         importPath = pathlib.Path(self.directoryPath)
 
         if (importPath.exists()):
@@ -61,9 +58,9 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
 
                         templateObj = self._getTemplateFromFilePath(filePath)
 
-                        if (templateObj.isValidTemplate()):
+                        if (templateObj is not None and templateObj.isValidTemplate()):
 
-                            self.importSourceCache.add(templateObj.getTemplateName(), templateObj.getTemplateVersion(), filePath)
+                            self.importSourceCache.add(templateObj.getTemplateName(), filePath)
 
                         else:
 
@@ -80,3 +77,9 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
         else:
 
             Exception('Directory Path [%s] does not exist!')
+
+    def refreshCache(self):
+
+        # more logic could be added to check mtime of directory etc.
+        self.clearCache()
+        self.buildCache()

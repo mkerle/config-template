@@ -1,0 +1,27 @@
+from unittest import TestCase
+
+from tests.baseTest import EXAMPLE_TEMPLATE_DIR, BASIC_JSON_TEMPLATE_NAME
+
+from configTemplate.environment.defaultEnvironment import DefaultEnvironment
+from configTemplate.importSource.directoryTemplateImportSource import DirectoryTemplateImportSource
+from configTemplate.template.jsonFileConfigTemplateSourceFactory import JSONFileConfigTemplateSourceFactory
+from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
+
+class testDefaultEnvironment(TestCase):
+
+    def testInstantiateEnvironment(self):
+
+        importSource=DirectoryTemplateImportSource(directoryPath=EXAMPLE_TEMPLATE_DIR, factoryMethod=JSONFileConfigTemplateSourceFactory)
+        env = DefaultEnvironment(importSource=importSource)
+        self.assertIsNotNone(env, 'Environment is None')
+
+
+    def testGetBasicTemplateFromEnvironment(self):
+
+        importSource=DirectoryTemplateImportSource(directoryPath=EXAMPLE_TEMPLATE_DIR, factoryMethod=JSONFileConfigTemplateSourceFactory)
+        env = DefaultEnvironment(importSource=importSource)
+        self.assertIsNotNone(env, 'Environment is None')
+
+        template = env.getTemplate(BASIC_JSON_TEMPLATE_NAME)
+
+        self.assertIsInstance(template, AbstractConfigTemplate)

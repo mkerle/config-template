@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod
 
-from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
+from configTemplate.template.abstractConfigTemplateSource import AbstractConfigTemplateSource
 from configTemplate.importSource.abstractTemplateSourceCache import AbstractTemplateSourceCache
+from configTemplate.template.abstractConfigTemplateSourceFactory import AbstractConfigTemplateSourceFactory
 
 class AbstractTemplateImportSource(ABC):
 
-    def __init__(self):
+    def __init__(self, directoryPath : str, factoryMethod : AbstractConfigTemplateSourceFactory):
         
-        self.importSourceCache = AbstractTemplateSourceCache()
+        self.directoryPath = directoryPath
+        self.factoryMethod = factoryMethod
 
     def clearCache(self):
         self.importSourceCache.clearCache()
@@ -15,11 +17,15 @@ class AbstractTemplateImportSource(ABC):
     @abstractmethod
     def buildCache(self):
         raise NotImplementedError()
+    
+    @abstractmethod
+    def refreshCache(self):
+        raise NotImplementedError()
 
     @abstractmethod
-    def hasTemplate(self, templateName : str, templateVersion : int) -> bool:
+    def hasTemplate(self, *args, **kwargs) -> bool:
         raise NotImplementedError()
     
     @abstractmethod
-    def getTemplate(self, templateName : str, templateVersion : int) -> AbstractConfigTemplate:
+    def getTemplate(self, *args, **kwargs) -> AbstractConfigTemplateSource:
         raise NotImplementedError()
