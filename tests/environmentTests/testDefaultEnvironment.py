@@ -6,6 +6,8 @@ from configTemplate.environment.defaultEnvironment import DefaultEnvironment
 from configTemplate.importSource.directoryTemplateImportSource import DirectoryTemplateImportSource
 from configTemplate.template.jsonFileConfigTemplateSourceFactory import JSONFileConfigTemplateSourceFactory
 from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
+from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
+from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
 
 class testDefaultEnvironment(TestCase):
 
@@ -19,7 +21,7 @@ class testDefaultEnvironment(TestCase):
     def testGetBasicTemplateFromEnvironment(self):
 
         importSource=DirectoryTemplateImportSource(directoryPath=EXAMPLE_TEMPLATE_DIR, factoryMethod=JSONFileConfigTemplateSourceFactory)
-        env = DefaultEnvironment(importSource=importSource)
+        env = DefaultEnvironment(importSource=importSource, templateFactory=JSONConfigTemplateFactory(), templateDefinition=DefaultTemplateDefinition())
         self.assertIsNotNone(env, 'Environment is None')
 
         template = env.getTemplate(BASIC_JSON_TEMPLATE_NAME)

@@ -2,12 +2,18 @@ from abc import ABC, abstractmethod
 from configTemplate.importSource.abstractTemplateImportSource import AbstractTemplateImportSource
 from configTemplate.template.abstractConfigTemplateSource import AbstractConfigTemplateSource
 from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
+from configTemplate.template.abstractConfigTemplateFactory import AbstractConfigTemplateFactory
+from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
 
 class AbstractEnvironment(ABC):
 
-    def __init__(self, importSource : AbstractTemplateImportSource | list = None):
+    def __init__(self, importSource : AbstractTemplateImportSource | list = None, 
+                    templateFactory : AbstractConfigTemplateFactory = AbstractConfigTemplateFactory,
+                    templateDefinition : AbstractTemplateDefinition = AbstractTemplateDefinition()):
         
         self.setTemplateImportSources(importSource)
+        self.templateFactory = templateFactory
+        self.templateDefinition = templateDefinition
     
     def addTemplateImportSource(self, importSource : AbstractTemplateImportSource):
 
@@ -32,17 +38,29 @@ class AbstractEnvironment(ABC):
     
     def _getInheritedTemplateSources(self, templateSource : AbstractConfigTemplateSource, inheritedTemplateSources : dict) -> dict:
 
-        for inheritedTemplate in templateSource.get
+        for inheritedTemplate in templateSource.getTemplateInheritedTemplates():
+
+            inheritedTemplateName = inheritedTemplate['name']
+            inheritedTemplateSource = self.getTemplate(inheritedTemplateName)
+
+            if (inheritedTemplateSource is None):
+                raise Exception('Unable to find inherited template [name=%s]' % (inheritedTemplateName))
+            
+            inheritedTemplateSources[inheritedTemplateName] = inheritedTemplateSource
+            inheritedTemplateSources = self._getInheritedTemplateSources(inheritedTemplateSource, inheritedTemplateSources)
+
+        return inheritedTemplateSources
 
     def getTemplate(self, templateName : str) -> AbstractConfigTemplate:
 
         for importSource in self.getTemplateImportSources():
 
             importSource.refreshCache()
-            template = importSource.getTemplate(templateName)
+            templateSource = importSource.getTemplate(templateName)
 
-            if (template is not None):
-                return template
+            if (templateSource is not None):
+                inheritedTemplateSources = self._getInheritedTemplateSources(templateSource, {})
+                return self.templateFactory.createTemplateFromSource(templateSource, inheritedTemplateSources, self.templateDefinition)
             
         return None
 

@@ -9,8 +9,8 @@ class AbstractConfigTemplateFactory(ABC):
     def __init__(self):
         pass
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def createTemplateFromSource(mainTemplateSource : AbstractConfigTemplateSource = None,
                         inheritedTemplatesSources : dict = None,
                         templateDefinition : AbstractTemplateDefinition = AbstractTemplateDefinition()) -> AbstractConfigTemplate:

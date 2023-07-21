@@ -31,11 +31,13 @@ class AbstractConfigTemplateSource(ABC):
     
     @abstractmethod
     def getTemplateInheritedTemplates(self) -> list:
-        return JSONConfigTemplateSource._getTemplateInheritedTemplates(self.templateObj)
+        '''
+        Returns a list of the inherited templates for the template source.
+        Each element of the list is a dict.
+        e.g [ { 'name' : 'My Template name' } ]
+        '''
+        raise NotImplementedError
     
-    @abstractmethod
-    def isValidTemplate(self) -> bool:
-        return JSONConfigTemplateSource.isValidTemplateData(self.templateObj)
     
     
 
