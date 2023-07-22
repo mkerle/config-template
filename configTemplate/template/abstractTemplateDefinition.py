@@ -32,3 +32,17 @@ class AbstractTemplateDefinition(ABC):
 
     def getVariableEnd(self) -> str:
         return self._variableEnd
+    
+    def isTemplateKeyword(self, s : str) -> bool:
+
+        if (s.startswith(self.getTemplateVariablePrefix())):
+            return True
+        
+        if (s == self.getImportBlockVariableName()):
+            return True
+        
+        return False
+    
+    def hasTemplateVariable(self, s : str) -> bool:
+
+        return s.strip().startswith(self.getVariableStart()) and s.strip().endswith(self.getVariableEnd())

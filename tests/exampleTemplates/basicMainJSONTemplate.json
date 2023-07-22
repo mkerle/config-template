@@ -1,0 +1,12 @@
+{
+    "name" : "Basic Main JSON Template",
+    "version" : 1,
+    "template" : {
+        "device-settings" : {
+            "$_import_blocks" : [ "Common Device Settings" ],
+            "$_var_environment" : "EDGE",
+            "name" : "{{settings.name}}",
+            "mode" : "proxy"
+        }
+    }
+}

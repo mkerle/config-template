@@ -1,70 +1,68 @@
 from unittest import TestCase
 
-import baseTemplateTest
+from tests.baseTest import BASIC_JSON_TEMPLATE_NAME, \
+                            EXAMPLE_BASIC_TEMPLATE_PATH, \
+                            EXAMPLE_TEMPLATE_DIR, \
+                            EXAMPLE_BASIC_CHILD_TEMPLATE_PATH, \
+                            EXAMPLE_BASIC_MAIN_TEMPLATE_PATH, \
+                            BASIC_CHILD_JSON_TEMPLATE_NAME, \
+                            BASIC_MAIN_JSON_TEMPLATE_NAME
 
+from configTemplate.template.jsonConfigTemplate import JSONConfigTemplate
+from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
+from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
 from configTemplate.template.jsonConfigTemplateSource import JSONConfigTemplateSource
+from configTemplate.template.jsonFileConfigTemplateSourceFactory import JSONFileConfigTemplateSourceFactory
+
 
 class testJSONTemplate(TestCase):
 
-    def testValidJSONTemplate(self):
+    def createJSONTemplate(self):
 
-        result = JSONConfigTemplateSource.isValidTemplateData(baseTemplateTest.templateObj)
-        self.assertTrue(result, 'isValidTemplate() returned False')
+        template = JSONConfigTemplate()
 
-    def testCreateSimpleJSONTemplate(self):
-        
-        template = JSONConfigTemplateSource(baseTemplateTest.templateObj)
+    def testCreateJSONTemplateFromSource(self):
 
-        templateName = template.getTemplateName()
-        self.assertTrue(templateName == baseTemplateTest.templateObj['name'], 'getTemplateName() did not return as expected')
+        templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_BASIC_TEMPLATE_PATH)
 
-        templateVersion = template.getTemplateVersion()
-        self.assertTrue(templateVersion == baseTemplateTest.templateObj['version'], 'getTemplateVersion() did not return as expected.')
+        self.assertIsInstance(templateSource, JSONConfigTemplateSource)
 
-        templateData = template.getTemplateData()
-        self.assertTrue(type(templateData) == dict, 'getTemplateData() is not a dict')
-        self.assertTrue(templateData == baseTemplateTest.templateObj['template'], 'getTemplateData() did not return as expected')
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource)
+        self.assertIsInstance(template, JSONConfigTemplate)
 
-    def testValidateJSONTemplate(self):
+        self.assertIsInstance(template.mainTemplateSource, JSONConfigTemplateSource)
 
-        self.assertFalse(JSONConfigTemplateSource.isValidTemplateData(None), 'isValidTemplate() returned true for None type template object')
+    def _setupAndTestBasicInheritedTemplate(self):
 
-        self.assertFalse(JSONConfigTemplateSource.isValidTemplateData([]), 'isValidTemplate() returned true for non dict template object')
+        templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_BASIC_MAIN_TEMPLATE_PATH)
+        self.assertIsInstance(templateSource, JSONConfigTemplateSource)
 
-        self.assertFalse(JSONConfigTemplateSource.isValidTemplateData({}), 'isValidTemplate() returned True for empty dict template object')
+        inheritedSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_BASIC_CHILD_TEMPLATE_PATH)
+        self.assertIsInstance(inheritedSource, JSONConfigTemplateSource)
 
-        templateObj = {'name' : 'Test'}
-        self.assertFalse(JSONConfigTemplateSource.isValidTemplateData(templateObj), 'isValidTemplate() returned true for template object missing version and template')
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {BASIC_CHILD_JSON_TEMPLATE_NAME : inheritedSource})
 
-        templateObj['version'] = 1
-        self.assertFalse(JSONConfigTemplateSource.isValidTemplateData(templateObj), 'isValidTemplate() returned true for template object missing template')
+        self.assertIsInstance(template.mainTemplateSource, JSONConfigTemplateSource)
+        self.assertIsInstance(template.inheritedTemplateSources, dict)
+        self.assertIn(BASIC_CHILD_JSON_TEMPLATE_NAME, template.inheritedTemplateSources)
+        self.assertIsInstance(template.inheritedTemplateSources[BASIC_CHILD_JSON_TEMPLATE_NAME], JSONConfigTemplateSource)
 
-        templateObj['template'] = []
-        self.assertFalse(JSONConfigTemplateSource.isValidTemplateData(templateObj), 'isValidTemplate() returned true for template object with invalid template data type')
+        return template
 
-        templateObj['template'] = {}
-        self.assertTrue(JSONConfigTemplateSource.isValidTemplateData(templateObj), 'isValidTemplate() returned false for valid template structure')
 
-    def testInheritedTemplates(self):
+    def testCreateJSONTemplateWithInheritedSource(self):
 
-        templateObj = {
-            'name' : 'Test',
-            'version' : 1,            
-            'template' : {}
-        }
+        self._setupAndTestBasicInheritedTemplate()
 
-        template = JSONConfigTemplateSource(templateObj)
-        self.assertTrue(template.getTemplateInheritedTemplates() == [], 'getTemplateInheritedTemplates() should have returned empty list when not defined in template')
+    def testRenderJSONTemplateWithInheritedSource(self):
 
-        templateObj['inherit-templates'] = {}
+        template = self._setupAndTestBasicInheritedTemplate()
 
-        self.assertRaises(Exception, JSONConfigTemplateSource.isValidTemplateData(templateObj), 'isValidTemplate() failed to raise exception for invalid type for inherit-templates')
+        renderedTemplate = template.render()
 
-        template = JSONConfigTemplateSource(templateObj)
-        self.assertRaises(Exception, template.getTemplateInheritedTemplates(), 'getTemplateInheritedTemplates() did not raise an exception for invalid inherit-templates type')
+        print(renderedTemplate)
 
-        templateObj['inherit-templates'] = []
 
-        self.assertTrue(JSONConfigTemplateSource.isValidTemplateData(templateObj), 'isValidTemplate() returned False for a valid template structure')
+
 
 

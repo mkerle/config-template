@@ -1,0 +1,7 @@
+{
+    "name" : "Common Device Settings",
+    "version" : 1,
+    "template" : {           
+        "mem-size" : "1024"
+    }
+}
