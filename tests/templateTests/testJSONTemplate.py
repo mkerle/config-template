@@ -56,9 +56,14 @@ class testJSONTemplate(TestCase):
 
     def testRenderJSONTemplateWithInheritedSource(self):
 
+        expectedRenderedTemplate = {'device-settings': {'name': 'device1', 'mode': 'proxy', 'mem-size': '1024'}, 'flattern-test': {'some-list': ['a', 'b', 99, {'list-name': 'some-list-name', 'sub-list': ['foo', 'bar']}, ['69']], 'x': 'y'}}
+
         template = self._setupAndTestBasicInheritedTemplate()
 
-        renderedTemplate = template.render()
+        settings = {'name' : 'device1'}
+        renderedTemplate = template.render(settings=settings)
+
+        self.assertDictEqual(expectedRenderedTemplate, renderedTemplate, 'Rendered template is not as expected.')
 
         print(renderedTemplate)
 

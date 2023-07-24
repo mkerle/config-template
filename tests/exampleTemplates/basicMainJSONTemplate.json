@@ -7,6 +7,10 @@
             "$_var_environment" : "EDGE",
             "name" : "{{settings.name}}",
             "mode" : "proxy"
+        },
+        "flattern-test" : {
+            "some-list" : [ "a", "b", 99, { "list-name" : "some-list-name", "sub-list" : ["foo", "bar"] }, ["69"]],
+            "x" : "y"
         }
     }
 }
