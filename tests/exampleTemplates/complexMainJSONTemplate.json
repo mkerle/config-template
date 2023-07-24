@@ -1,0 +1,26 @@
+{
+    "name" : "Complex Main JSON Template",
+    "version" : 1,
+    "template" : {
+        "$_var_global_environment" : "EDGE",
+        "device-settings" : {
+            "$_import_blocks" : [ "Common Device Settings" ],            
+            "name" : "{{settings.name}}",
+            "mode" : "proxy"
+        },
+        "device-interfaces" : [
+            {
+                "$_var_portIdentifier" : { "zone" : "DMZ", "network-index" : 0, "network-type" : "lan" },
+                "$_import_blocks" : [ "Common Interface Settings" ]
+            },
+            {
+                "$_var_portIdentifier" : { "zone" : "DMZ", "network-index" : 1, "network-type" : "lan" },
+                "$_import_blocks" : [ "Common Interface Settings" ]
+            },
+            {
+                "$_var_portIdentifier" : { "zone" : "CORP", "network-index" : 0, "network-type" : "lan" },
+                "$_import_blocks" : [ "Common Interface Settings" ]
+            }            
+        ]        
+    }
+}

@@ -18,87 +18,6 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         self.inheritedTemplateSources = inheritedTemplatesSources
         self.resolvedTemplates = {}
 
-    def _mergeDict(self, origData : dict, mergeData : dict) -> dict:
-
-        print('Merging data')
-
-        for k in mergeData:
-            if (k not in origData):
-                origData[k] = mergeData[k]
-
-            elif (type(mergeData[k]) == dict):
-                origData[k] = self._mergeDict(origData[k], mergeData[k])
-
-            elif (type(mergeData[k]) == list):
-                for listVal in mergeData[k]:
-                    if (listVal not in origData[k]):
-                        origData[k].append(listVal)
-
-        return origData
-
-    def _handleInsertBlock(self, obj : dict | list, index : str | int, *args, **kwargs):
-
-        if (type(index) == str):
-
-            print('Processing %s' % (index))
-
-            if (index == self.getTemplateDefinition().getImportBlockVariableName()):
-
-                print('Found import variable')
-
-                if (type(obj) == dict):                    
-                    if (type(obj[index]) == list):
-
-                        for importSourceTemplateName in obj[index]:
-
-                            if (type(importSourceTemplateName) == str):
-                                sourceTemplate = self.inheritedTemplateSources.get(importSourceTemplateName, None)
-
-                                if (sourceTemplate is None):
-                                    raise Exception('Unable to find source template for template. [Source Name=%s]' % (importSourceTemplateName))
-                                
-                                sourceBlock = copy.deepcopy(sourceTemplate.getTemplateData())
-                                self._traverseObj(sourceBlock, self._handleInsertBlock, *args, **kwargs)
-
-                                # merge the data
-                                obj = self._mergeDict(obj, sourceBlock)
-
-                            else:
-                                raise Exception('Expected str for inherited template source name!')
-                        
-                    else:
-                        raise Exception('Import source block type should be a list!')
-                    
-                else:
-                    raise Exception('Import source blocks only supported inside a dictionary at this stage.')
-                
-        return obj
-                                
-
-    def _traverseObjOrig(self, obj, callback, *args, **kwargs) -> any:
-
-        if (type(obj) == dict):
-            
-            for k in obj:
-                
-                if (self.getTemplateDefinition().isTemplateKeyword(k)):
-                    obj = callback(obj, k, *args, **kwargs)
-                
-                if (type(obj[k]) == dict or type(obj[k]) == list):
-                    obj[k] = self._traverseObj(obj[k], callback)
-                else:
-                    obj = callback(obj, k, *args, **kwargs)
-
-        elif (type(obj) == list):
-
-            for i in range(0, len(obj)):
-                if (type(obj[i]) == dict or type(obj[i]) == list):
-                    obj[i] = self._traverseObj(obj[i], callback)
-                else:
-                    obj = callback(obj, i, *args, **kwargs)
-
-        return obj
-    
     def _getxpathStr(self, index : str | int) -> str:
 
         if (type(index) == str):
@@ -138,35 +57,43 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         
         callbackRetObj[xpath] = obj[index]
         return callbackRetObj
-
     
-    def _mergeAndUpdate(self, mergeData : dict | list, origData : dict | list):
-                
-        for k in mergeData:
-            
-            if (k == self.getTemplateDefinition().getImportBlockVariableName()):
-                for inheritedTemplateSourceName in mergeData[k]:
-                    if (inheritedTemplateSourceName not in self.resolvedTemplates):
-                        if inheritedTemplateSourceName not in self.inheritedTemplateSources:
-                            raise Exception('Could not find inherited template source to resolve: [%s]' % (inheritedTemplateSourceName))
-                        self.resolveTemplateSource(self.inheritedTemplateSources[inheritedTemplateSourceName])
-                    
-                    origData = self._mergeAndUpdate(self.resolvedTemplates[inheritedTemplateSourceName], origData)
+    def _mergeAndUpdateV2(self, mergeData : dict | list, origData : dict | list) -> dict | list:
 
-                del origData[k]
+        if (type(mergeData) == dict):
 
-            elif (k not in origData):
-                origData[k] = mergeData[k]
+            for k in mergeData:
 
-            elif (type(mergeData[k]) == dict):
-                origData[k] = self._mergeAndUpdate(origData[k], mergeData[k])
+                if (k == self.getTemplateDefinition().getImportBlockVariableName()):
+                    for inheritedTemplateSourceName in mergeData[k]:
+                        if (inheritedTemplateSourceName not in self.resolvedTemplates):
+                            if inheritedTemplateSourceName not in self.inheritedTemplateSources:
+                                raise Exception('Could not find inherited template source to resolve: [%s]' % (inheritedTemplateSourceName))
+                            self.resolveTemplateSource(self.inheritedTemplateSources[inheritedTemplateSourceName])
+                        
+                        origData = self._mergeAndUpdateV2(self.resolvedTemplates[inheritedTemplateSourceName], origData)
 
-            elif (type(mergeData[k]) == list):
-                for listVal in mergeData[k]:
-                    if (listVal not in origData[k]):
-                        origData[k].append(listVal)
+                elif (k not in origData):
+                    origData[k] = copy.deepcopy(mergeData[k])
+
+                origData[k] = self._mergeAndUpdateV2(mergeData[k], origData[k])
+
+        elif (type(mergeData) == list):
+
+            for listVal in mergeData:
+
+                if (listVal not in origData):
+
+                    origData.append(listVal)
+
+                if (type(listVal) in [dict, list]):
+                    mergeDataListValObj = mergeData[mergeData.index(listVal)]
+                    origDataListValObj = origData[origData.index(listVal)]
+
+                    origDataListValObj = self._mergeAndUpdateV2(mergeDataListValObj, origDataListValObj)
 
         return origData
+
     
     def resolveTemplateSource(self, templateSource : JSONConfigTemplateSource):
 
@@ -174,7 +101,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
             print('Resolving template source [%s]...' % (templateSource.getTemplateName()))
 
-            resolvedTemplate = self._mergeAndUpdate(templateSource.getTemplateData(), copy.deepcopy(templateSource.getTemplateData()))
+            resolvedTemplate = self._mergeAndUpdateV2(templateSource.getTemplateData(), copy.deepcopy(templateSource.getTemplateData()))
 
             self.resolvedTemplates[templateSource.getTemplateName()] = resolvedTemplate
 
@@ -202,7 +129,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         if (len(variableParts) <= 2):
             if (variableParts[0] in kwargs):
                 try:
-                    return getattr(kwargs[variableParts[0], variableParts[1]])
+                    return getattr(kwargs[variableParts[0]], variableParts[1])
                     
                 except:
 
@@ -212,7 +139,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                         raise Exception('Unable to find variable "%s" in supplied arguments' % (templateVariableName))
                     
             else:
-                raise Exception('Unable to find variable "%s" in supplied arguments' % (templateVariableName))
+                raise Exception('Unable to find variable "%s" in kwargs' % (templateVariableName))
 
         else:
             raise Exception('Variable "%s" is not supported - too many levels' % (templateVariableName))
@@ -241,9 +168,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                         obj = self._getVariableFromArgs(parsedValue, *args, **kwargs)
 
-                        if (callable(obj)):
-                            obj(xpath, flatternedTemplate, *args, **kwargs)
-
+                        if (callable(obj)):                            
+                            flatternedTemplate[xpath] = obj(xpath, flatternedTemplate, *args, **kwargs)
                         else:
                             flatternedTemplate[xpath] = obj
 
@@ -251,10 +177,6 @@ class JSONConfigTemplate(AbstractConfigTemplate):
             variableLevel += 1
                         
         return flatternedTemplate
-    
-    def _createDictStructureFromXpath(self, xpath : str, unflatternedTemplate : dict, resolvedTemplate : dict) -> dict:
-        '''Delete this func'''
-        raise NotImplementedError
     
     def _stripXPathName(self, s : str) -> str | int:
 

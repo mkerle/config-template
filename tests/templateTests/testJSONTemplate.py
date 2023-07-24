@@ -6,7 +6,10 @@ from tests.baseTest import BASIC_JSON_TEMPLATE_NAME, \
                             EXAMPLE_BASIC_CHILD_TEMPLATE_PATH, \
                             EXAMPLE_BASIC_MAIN_TEMPLATE_PATH, \
                             BASIC_CHILD_JSON_TEMPLATE_NAME, \
-                            BASIC_MAIN_JSON_TEMPLATE_NAME
+                            BASIC_MAIN_JSON_TEMPLATE_NAME, \
+                            EXAMPLE_COMPLEX_MAIN_TEMPLATE_PATH, \
+                            EXAMPLE_COMPLEX_COMMON_INTERFACE_TEMPLATE_PATH, \
+                            COMMON_INTERFACE_JSON_TEMPLATE_NAME
 
 from configTemplate.template.jsonConfigTemplate import JSONConfigTemplate
 from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
@@ -14,6 +17,7 @@ from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDef
 from configTemplate.template.jsonConfigTemplateSource import JSONConfigTemplateSource
 from configTemplate.template.jsonFileConfigTemplateSourceFactory import JSONFileConfigTemplateSourceFactory
 
+from tests.templateTests.complexJSONTestClass import DeviceSettings
 
 class testJSONTemplate(TestCase):
 
@@ -67,7 +71,14 @@ class testJSONTemplate(TestCase):
 
         print(renderedTemplate)
 
+    def testRenderComplexTemplate(self):
 
+        templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_COMPLEX_MAIN_TEMPLATE_PATH)
 
+        inheritedInterfaceSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_COMPLEX_COMMON_INTERFACE_TEMPLATE_PATH)
+        inheritedDeviceSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_BASIC_CHILD_TEMPLATE_PATH)
 
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {COMMON_INTERFACE_JSON_TEMPLATE_NAME : inheritedInterfaceSource, BASIC_CHILD_JSON_TEMPLATE_NAME : inheritedDeviceSource})
 
+        renderedTemplate = template.render(settings=DeviceSettings('device2'))
+        print(renderedTemplate)

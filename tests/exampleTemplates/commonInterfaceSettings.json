@@ -1,0 +1,11 @@
+{
+    "name" : "Common Interface Settings",
+    "version" : 1,
+    "template" : {
+        "port" : "{{settings.getPhysicalPort}}",
+        "vrf" : "{{settings.getVRF}}",
+        "vlan" : "{{settings.getVlan}}",
+        "name" : "{{settings.getInterfaceName}}",
+        "mtu" : 1500
+    }
+}
