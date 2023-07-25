@@ -56,5 +56,9 @@ class DeviceSettings(object):
         zoneName = self.getInterfaceZoneName(xpath, flatternedTemplate)
 
         return '%s-v%d' % (zoneName, self.getVlan(xpath, flatternedTemplate, *args, **kwargs))
+    
+    def isPrimary(self, xpath : str, flatternedTemplate : dict, *args, **kwargs) -> bool:
+
+        return False
 
 

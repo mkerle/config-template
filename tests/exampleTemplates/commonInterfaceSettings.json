@@ -6,6 +6,8 @@
         "vrf" : "{{settings.getVRF}}",
         "vlan" : "{{settings.getVlan}}",
         "name" : "{{settings.getInterfaceName}}",
-        "mtu" : 1500
+        "mtu" : 1500,
+        "vrrp-priority" : "{% if settings.isPrimary then 100 else 95 %}",
+        "vrrp-dst" : "{% if settings.isPrimary then '1.1.1.1' else '2.2.2.2' %}"
     }
 }
