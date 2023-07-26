@@ -88,7 +88,7 @@ class JSONConfigTemplateSource(AbstractConfigTemplateSource):
     def _getTemplateInheritedTemplates(templateObj : dict) -> list:
 
         if (JSONConfigTemplateSource._hasTemplateInheritedTemplates(templateObj)):
-            return templateObj[JSONConfigTemplateSource.FIELD_TEMPLATE_DATA]
+            return templateObj[JSONConfigTemplateSource.FIELD_TEMPLATE_INHERIT]
         
         # inherited templates is optional - return empty list
         return []

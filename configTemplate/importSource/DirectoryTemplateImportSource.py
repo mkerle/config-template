@@ -68,7 +68,7 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
                     
                     else:
 
-                        print('Ignoring non-normal file [%s]' % (filePath))
+                        print('Ignoring non-normal file [%s]' % (childPath.as_posix()))
 
             else:
 

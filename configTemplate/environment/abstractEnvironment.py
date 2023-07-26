@@ -39,9 +39,9 @@ class AbstractEnvironment(ABC):
     def _getInheritedTemplateSources(self, templateSource : AbstractConfigTemplateSource, inheritedTemplateSources : dict) -> dict:
 
         for inheritedTemplate in templateSource.getTemplateInheritedTemplates():
-
+            print(inheritedTemplate)
             inheritedTemplateName = inheritedTemplate['name']
-            inheritedTemplateSource = self.getTemplate(inheritedTemplateName)
+            inheritedTemplateSource = self._getTemplateSource(inheritedTemplateName)
 
             if (inheritedTemplateSource is None):
                 raise Exception('Unable to find inherited template [name=%s]' % (inheritedTemplateName))
@@ -50,17 +50,24 @@ class AbstractEnvironment(ABC):
             inheritedTemplateSources = self._getInheritedTemplateSources(inheritedTemplateSource, inheritedTemplateSources)
 
         return inheritedTemplateSources
+    
+    def _getTemplateSource(self, templateName : str) -> AbstractConfigTemplateSource:
 
-    def getTemplate(self, templateName : str) -> AbstractConfigTemplate:
-
+        templateSource = None
         for importSource in self.getTemplateImportSources():
 
             importSource.refreshCache()
             templateSource = importSource.getTemplate(templateName)
 
-            if (templateSource is not None):
-                inheritedTemplateSources = self._getInheritedTemplateSources(templateSource, {})
-                return self.templateFactory.createTemplateFromSource(templateSource, inheritedTemplateSources, self.templateDefinition)
-            
+        return templateSource
+
+    def getTemplate(self, templateName : str) -> AbstractConfigTemplate:
+
+        templateSource = self._getTemplateSource(templateName)
+
+        if (templateSource is not None):
+            inheritedTemplateSources = self._getInheritedTemplateSources(templateSource, {})
+            return self.templateFactory.createTemplateFromSource(templateSource, inheritedTemplateSources, self.templateDefinition)
+        
         return None
 

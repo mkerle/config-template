@@ -1,6 +1,10 @@
 {
     "name" : "Complex Main JSON Template",
     "version" : 1,
+    "inherited-templates" : [
+        { "name" : "Common Device Settings" },
+        { "name" : "Common Interface Settings" }
+    ],
     "template" : {
         "$_var_global_environment" : "EDGE",
         "device-settings" : {
