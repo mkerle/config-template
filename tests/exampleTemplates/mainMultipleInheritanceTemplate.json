@@ -1,0 +1,9 @@
+{
+    "name" : "Main Multiple Inheritance Template",
+    "version" : 1,
+    "inherited-templates" : [ { "name" : "Common Template 1" }, { "name" : "Common Template 2" } ],
+    "template" : {
+        "name" : "Test",
+        "$_import_blocks" : [ "Common Template 1", "Common Template 2" ]
+    }
+}

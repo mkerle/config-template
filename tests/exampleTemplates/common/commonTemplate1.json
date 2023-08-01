@@ -1,0 +1,10 @@
+{
+    "name" : "Common Template 1",
+    "version" : 1,
+    "inherited-templates" : [ ],
+    "template" : {
+        "common-template-1" : {
+            "type" : "common1"
+        }
+    }
+}

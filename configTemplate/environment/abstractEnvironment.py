@@ -5,6 +5,8 @@ from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplat
 from configTemplate.template.abstractConfigTemplateFactory import AbstractConfigTemplateFactory
 from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
 
+import logging
+
 class AbstractEnvironment(ABC):
 
     def __init__(self, importSource : AbstractTemplateImportSource | list = None, 
@@ -38,9 +40,12 @@ class AbstractEnvironment(ABC):
     
     def _getInheritedTemplateSources(self, templateSource : AbstractConfigTemplateSource, inheritedTemplateSources : dict) -> dict:
 
-        for inheritedTemplate in templateSource.getTemplateInheritedTemplates():
-            print(inheritedTemplate)
+        for inheritedTemplate in templateSource.getTemplateInheritedTemplates():            
+
             inheritedTemplateName = inheritedTemplate['name']
+            
+            logging.debug('AbstractEnvironment._getInheritedTemplateSources() -> Looing for inherited template: [%s]' % (inheritedTemplateName))
+
             inheritedTemplateSource = self._getTemplateSource(inheritedTemplateName)
 
             if (inheritedTemplateSource is None):
@@ -54,7 +59,7 @@ class AbstractEnvironment(ABC):
     def _getTemplateSource(self, templateName : str) -> AbstractConfigTemplateSource:
 
         templateSource = None
-        for importSource in self.getTemplateImportSources():
+        for importSource in self.getTemplateImportSources():            
 
             importSource.refreshCache()
             templateSource = importSource.getTemplate(templateName)
@@ -62,6 +67,8 @@ class AbstractEnvironment(ABC):
         return templateSource
 
     def getTemplate(self, templateName : str) -> AbstractConfigTemplate:
+
+        logging.debug('AbstractEnvironment.getTemplate() -> Looking for requested template [%s]' % (templateName))
 
         templateSource = self._getTemplateSource(templateName)
 

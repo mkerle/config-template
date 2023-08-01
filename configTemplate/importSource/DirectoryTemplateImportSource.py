@@ -6,7 +6,7 @@ from configTemplate.template.abstractConfigTemplateSourceFactory import Abstract
 
 import os
 import pathlib
-
+import logging
 
 class DirectoryTemplateImportSource(AbstractTemplateImportSource):
 
@@ -24,20 +24,26 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
 
         if (os.path.exists(templateFilePath)):
 
-            try:
+            try:                
                 return self.factoryMethod.createTemplateSource(templateFilePath)
             except:
                 Exception('An error occured getting template! Path: [%s]' % (templateFilePath))
+
+        logging.warning('DirectoryTemplateImportSource._getTemplateFromFilePath() -> Could not find template at path [%s]' % (templateFilePath))
 
         return None
     
     def getTemplate(self, templateName: str, *args, **kwargs) -> AbstractConfigTemplateSource:
         
+        print(self.importSourceCache.get(templateName))
+        print(self.importSourceCache.cache[templateName])
         templateFilePath = str(self.importSourceCache.get(templateName))
 
         if (templateFilePath is not None):
+            logging.debug('DirectoryTemplateImportSource.getTemplate() -> Found template [%s] in cache' % (templateName))
             return self._getTemplateFromFilePath(templateFilePath)
         
+        logging.debug('DirectoryTemplateImportSource.getTemplate() -> Could not find template [%s] in cache' % (templateName))
         return None
     
     def buildCache(self):
@@ -45,6 +51,8 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
         self.importSourceCache.clearCache()
 
         importPath = pathlib.Path(self.directoryPath)
+
+        logging.debug('DirectoryTemplateImportSource.buildCache() -> Using directory: %s' % (self.directoryPath))
 
         if (importPath.exists()):
 
@@ -56,19 +64,23 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
 
                         filePath = childPath.as_posix()
 
+                        logging.debug('DirectoryTemplateImportSource.buildCache() -> Processing file at [%s]' % (filePath))
+
                         templateObj = self._getTemplateFromFilePath(filePath)
 
                         if (templateObj is not None and templateObj.isValidTemplate()):
+
+                            logging.debug('DirectoryTemplateImportSource.buildCache() -> Found valid template [%s] from file [%s] - adding to cache' % (templateObj.getTemplateName(), filePath))
 
                             self.importSourceCache.add(templateObj.getTemplateName(), filePath)
 
                         else:
 
-                            print('File at [%s] does not contain a valid config template' % (filePath))
+                            logging.debug('DirectoryTemplateImportSource.buildCache() -> File [%s] was not a valid template' % (filePath))
                     
                     else:
 
-                        print('Ignoring non-normal file [%s]' % (childPath.as_posix()))
+                        logging.debug('DirectoryTemplateImportSource.buildCache() -> Ignoring non-normal file [%s]' % (childPath.as_posix()))
 
             else:
 
