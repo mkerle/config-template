@@ -25,8 +25,6 @@ class AbstractTemplateSourceCache(ABC):
         logging.debug('AbstractTemplateSourceCache.get() -> Checking cache for key [%s]' % (k))
 
         if (k in self.cache):
-            print('Yes it is in there!!!!!!!')
-            print(self.cache[k])
             return self.cache[k]
     
         return self.cache.get(k, None)

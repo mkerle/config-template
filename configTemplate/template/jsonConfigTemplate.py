@@ -4,6 +4,7 @@ from configTemplate.template.abstractTemplateDefinition import AbstractTemplateD
 from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
 
 import copy
+import logging
 
 class JSONConfigTemplate(AbstractConfigTemplate):
 
@@ -99,7 +100,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         if (templateSource.getTemplateName() not in self.resolvedTemplates):
 
-            print('Resolving template source [%s]...' % (templateSource.getTemplateName()))
+            logging.info('jsonConfigTemplate.resolveTemplateSource() -> Resolving template source [%s]...' % (templateSource.getTemplateName()))           
 
             resolvedTemplate = self._mergeAndUpdateV2(templateSource.getTemplateData(), copy.deepcopy(templateSource.getTemplateData()))
 
@@ -107,7 +108,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         else:
 
-            print('Template source [%s] already resolved' % (templateSource.getTemplateName()))
+            logging.info('jsonConfigTemplate.resolveTemplateSource() -> Template source [%s] already resolved' % (templateSource.getTemplateName()))
 
 
     def flatternResolvedTemplate(self, resolvedTemplate : dict) -> dict:
