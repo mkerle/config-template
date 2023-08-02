@@ -64,6 +64,9 @@ class AbstractEnvironment(ABC):
             importSource.refreshCache()
             templateSource = importSource.getTemplate(templateName)
 
+            if (templateSource is not None):
+                return templateSource
+
         return templateSource
 
     def getTemplate(self, templateName : str) -> AbstractConfigTemplate:

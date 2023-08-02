@@ -35,8 +35,9 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
     
     def getTemplate(self, templateName: str, *args, **kwargs) -> AbstractConfigTemplateSource:
         
-        print(self.importSourceCache.get(templateName))
-        print(self.importSourceCache.cache[templateName])
+        logging.debug('DirectoryTemplateImportSource.getTemplate() -> Looking for template [%s] in [%s]' % (templateName, self.directoryPath))
+        logging.debug('DirectoryTemplateImportSource.getTemplate() -> Cache state: %s' % (str(self.importSourceCache.cache)))
+
         templateFilePath = str(self.importSourceCache.get(templateName))
 
         if (templateFilePath is not None):
