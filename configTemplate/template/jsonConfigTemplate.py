@@ -299,7 +299,6 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         self.resolvedTemplates = {}
         self.resolveTemplateSource(self.mainTemplateSource, *args, **kwargs)
 
-
         flatternedTemplate = self.flatternResolvedTemplate(self.resolvedTemplates[self.mainTemplateSource.getTemplateName()])
 
         variableResolvedTemplate = self.resolveTemplateVariables(flatternedTemplate, *args, **kwargs)        
