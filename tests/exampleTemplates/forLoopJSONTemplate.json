@@ -1,0 +1,10 @@
+{
+    "name" : "For Loop JSON Template",
+    "version" : 1,
+    "inherited-templates" : [],
+    "template" : {
+        "some-list" : [
+            "{% for data in {{myData}} do data %}" 
+        ]
+    }
+}

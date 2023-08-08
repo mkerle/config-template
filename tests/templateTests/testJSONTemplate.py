@@ -9,7 +9,9 @@ from tests.baseTest import BASIC_JSON_TEMPLATE_NAME, \
                             BASIC_MAIN_JSON_TEMPLATE_NAME, \
                             EXAMPLE_COMPLEX_MAIN_TEMPLATE_PATH, \
                             EXAMPLE_COMPLEX_COMMON_INTERFACE_TEMPLATE_PATH, \
-                            COMMON_INTERFACE_JSON_TEMPLATE_NAME
+                            COMMON_INTERFACE_JSON_TEMPLATE_NAME, \
+                            FOR_LOOP_JSON_TEMPLATE_NAME, \
+                            EXAMPLE_FOR_LOOP_TEMPLATE_PATH
 
 from configTemplate.template.jsonConfigTemplate import JSONConfigTemplate
 from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
@@ -68,8 +70,7 @@ class testJSONTemplate(TestCase):
         renderedTemplate = template.render(settings=settings)
 
         self.assertDictEqual(expectedRenderedTemplate, renderedTemplate, 'Rendered template is not as expected.')
-
-        print(renderedTemplate)
+        
 
     def testRenderComplexTemplate(self):
 
@@ -81,4 +82,19 @@ class testJSONTemplate(TestCase):
         template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {COMMON_INTERFACE_JSON_TEMPLATE_NAME : inheritedInterfaceSource, BASIC_CHILD_JSON_TEMPLATE_NAME : inheritedDeviceSource})
 
         renderedTemplate = template.render(settings=DeviceSettings('device2'))
-        print(renderedTemplate)
+
+        expectedResult = {'device-settings': {'name': 'device2', 'mode': 'proxy', 'mem-size': '1024'}, 'device-interfaces': [{'port': 'port1', 'vrf': 'DMZ', 'vlan': 100, 'name': 'DMZ-v100', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'DMZ', 'vlan': 101, 'name': 'DMZ-v101', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'CORP', 'vlan': 200, 'name': 'CORP-v200', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}]}
+        self.assertDictEqual(expectedResult, renderedTemplate)
+
+    def testForLoopTemplate(self):
+
+        templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_FOR_LOOP_TEMPLATE_PATH)
+
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, DefaultTemplateDefinition())
+
+        renderedTemplate = template.render(myData=[{'name' : 'object1'}, {'name' : 'object2'}, {'name' : 'object3'}])
+        
+        expectedResult = {'some-list': [{'name': 'object1'}, {'name': 'object2'}, {'name': 'object3'}]}
+        self.assertDictEqual(expectedResult, renderedTemplate)
+
+

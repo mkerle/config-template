@@ -59,7 +59,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         callbackRetObj[xpath] = obj[index]
         return callbackRetObj
     
-    def _mergeAndUpdateV2(self, mergeData : dict | list, origData : dict | list) -> dict | list:
+    def _mergeAndUpdateV2(self, mergeData : dict | list, origData : dict | list, *args, **kwargs) -> dict | list:
 
         if (type(mergeData) == dict):
 
@@ -70,20 +70,46 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                         if (inheritedTemplateSourceName not in self.resolvedTemplates):
                             if inheritedTemplateSourceName not in self.inheritedTemplateSources:
                                 raise Exception('Could not find inherited template source to resolve: [%s]' % (inheritedTemplateSourceName))
-                            self.resolveTemplateSource(self.inheritedTemplateSources[inheritedTemplateSourceName])
+                            self.resolveTemplateSource(self.inheritedTemplateSources[inheritedTemplateSourceName], *args, **kwargs)
                         
-                        origData = self._mergeAndUpdateV2(self.resolvedTemplates[inheritedTemplateSourceName], origData)
+                        origData = self._mergeAndUpdateV2(self.resolvedTemplates[inheritedTemplateSourceName], origData, *args, **kwargs)
 
                 elif (k not in origData):
                     origData[k] = copy.deepcopy(mergeData[k])
 
-                origData[k] = self._mergeAndUpdateV2(mergeData[k], origData[k])
+                origData[k] = self._mergeAndUpdateV2(mergeData[k], origData[k], *args, **kwargs)
 
         elif (type(mergeData) == list):
 
             for listVal in mergeData:
 
-                if (listVal not in origData):
+                if (type(listVal) == str and self.getTemplateDefinition().getTypeOfControlStructure(listVal) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_FOR):
+
+                    code, dataSrcVariable = self.getTemplateDefinition().getForControlStructureCode(listVal)
+                    
+                    if (self.getTemplateDefinition().hasTemplateVariable(dataSrcVariable)):
+                        localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
+                        dataSrc = self._evaluateVariable(dataSrcVariable[2:-2], '$', localFlatternedTemplate, *args, **kwargs)
+                    else:
+                        dataSrc = eval(dataSrcVariable)
+
+                    retVals = []
+                    globals = {
+                        self.getTemplateDefinition().CONTROL_STRUCTURE_DATASRC_FOR : dataSrc, 
+                        self.getTemplateDefinition().CONTROL_STRUCTURE_RETVAL_FOR : retVals
+                    }
+                    
+                    exec(code, globals)
+
+                    if (type(retVals) == list):
+                        origData += retVals
+                    else:
+                        raise Exception('Dont know how to handle type %s from for loop control structure' % (str(type(retVals))))
+                    
+                    if (listVal in origData):
+                        origData.remove(listVal)
+
+                elif (listVal not in origData):
 
                     origData.append(listVal)
 
@@ -91,18 +117,18 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     mergeDataListValObj = mergeData[mergeData.index(listVal)]
                     origDataListValObj = origData[origData.index(listVal)]
 
-                    origDataListValObj = self._mergeAndUpdateV2(mergeDataListValObj, origDataListValObj)
+                    origDataListValObj = self._mergeAndUpdateV2(mergeDataListValObj, origDataListValObj, *args, **kwargs)
 
         return origData
 
     
-    def resolveTemplateSource(self, templateSource : JSONConfigTemplateSource):
+    def resolveTemplateSource(self, templateSource : JSONConfigTemplateSource, *args, **kwargs):
 
         if (templateSource.getTemplateName() not in self.resolvedTemplates):
 
             logging.info('jsonConfigTemplate.resolveTemplateSource() -> Resolving template source [%s]...' % (templateSource.getTemplateName()))           
 
-            resolvedTemplate = self._mergeAndUpdateV2(templateSource.getTemplateData(), copy.deepcopy(templateSource.getTemplateData()))
+            resolvedTemplate = self._mergeAndUpdateV2(templateSource.getTemplateData(), copy.deepcopy(templateSource.getTemplateData()), *args, **kwargs)
 
             self.resolvedTemplates[templateSource.getTemplateName()] = resolvedTemplate
 
@@ -167,23 +193,25 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                     val = flatternedTemplate[xpath]
 
-                    if (self.getTemplateDefinition().hasTemplateLogic(val)):
+                    if (self.getTemplateDefinition().hasTemplateControlStructure(val)):
+
+                        if (self.getTemplateDefinition().getTypeOfControlStructure(val) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_IF):
                         
-                        condition = self.getTemplateDefinition().getLogicCondition(val)                        
+                            condition = self.getTemplateDefinition().getIfControlStructureCondition(val)                        
 
-                        evaluatedCondition = self._evaluateVariable(condition, xpath, flatternedTemplate, *args, **kwargs)
+                            evaluatedCondition = self._evaluateVariable(condition, xpath, flatternedTemplate, *args, **kwargs)
 
-                        if (type(evaluatedCondition) == bool):
-                            if (evaluatedCondition):
-                                retVal = self.getTemplateDefinition().getLogicReturnTrue(val)                            
-                            else:
-                                retVal = self.getTemplateDefinition().getLogicReturnFalse(val)                            
+                            if (type(evaluatedCondition) == bool):
+                                if (evaluatedCondition):
+                                    retVal = self.getTemplateDefinition().getIfControlStructureReturnTrue(val)                            
+                                else:
+                                    retVal = self.getTemplateDefinition().getIfControlStructureReturnFalse(val)                            
 
-                            if (self.getTemplateDefinition().hasTemplateVariable(retVal)):
-                                flatternedTemplate[xpath] = self._evaluateVariable(retVal[2:-2], xpath, flatternedTemplate, *args, **kwargs)
-                            else:
-                                flatternedTemplate[xpath] = retVal
-
+                                if (self.getTemplateDefinition().hasTemplateVariable(retVal)):
+                                    flatternedTemplate[xpath] = self._evaluateVariable(retVal[2:-2], xpath, flatternedTemplate, *args, **kwargs)
+                                else:
+                                    flatternedTemplate[xpath] = retVal
+                            
                         else:
                             raise Exception('Evaluated logic condition did not return a boolean type: %s' % (condition))
 
@@ -269,7 +297,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
     def render(self, *args, **kwargs) -> any:
 
         self.resolvedTemplates = {}
-        self.resolveTemplateSource(self.mainTemplateSource)
+        self.resolveTemplateSource(self.mainTemplateSource, *args, **kwargs)
+
 
         flatternedTemplate = self.flatternResolvedTemplate(self.resolvedTemplates[self.mainTemplateSource.getTemplateName()])
 
