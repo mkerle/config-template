@@ -4,9 +4,11 @@ from configTemplate.template.abstractConfigTemplateSource import AbstractConfigT
 from configTemplate.template.abstractConfigTemplateFactory import AbstractConfigTemplateFactory
 from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
 
+from typing import Union, Tuple
+
 class DefaultEnvironment(AbstractEnvironment):
 
-    def __init__(self, importSource : AbstractTemplateImportSource | list = None, 
+    def __init__(self, importSource : Union[AbstractTemplateImportSource, list] = None, 
                     templateFactory : AbstractConfigTemplateFactory = AbstractConfigTemplateFactory,
                     templateDefinition : AbstractTemplateDefinition = AbstractTemplateDefinition()):
 

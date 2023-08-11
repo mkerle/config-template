@@ -1,3 +1,4 @@
+from typing import Union
 
 def getParentXpath(xpath : str) -> str:
 
@@ -42,7 +43,7 @@ def getChildKeyFromXpath(xpath : str) -> str:
         raise Exception('xpath is not a str')
 
         
-def joinChildToXpath(parentXpath : str, childIndex : str | int) -> str:
+def joinChildToXpath(parentXpath : str, childIndex : Union[str, int]) -> str:
 
     if (type(childIndex) == str):
         return parentXpath + '["%s"]' % childIndex

@@ -6,10 +6,11 @@ from configTemplate.template.abstractConfigTemplateFactory import AbstractConfig
 from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
 
 import logging
+from typing import Union, Tuple
 
 class AbstractEnvironment(ABC):
 
-    def __init__(self, importSource : AbstractTemplateImportSource | list = None, 
+    def __init__(self, importSource : Union[AbstractTemplateImportSource, list] = None, 
                     templateFactory : AbstractConfigTemplateFactory = AbstractConfigTemplateFactory,
                     templateDefinition : AbstractTemplateDefinition = AbstractTemplateDefinition()):
         
@@ -24,7 +25,7 @@ class AbstractEnvironment(ABC):
         else:
             raise TypeError('importSource should be an instance of AbstractTemplateImportSource')
 
-    def setTemplateImportSources(self, importSource : AbstractTemplateImportSource | list):
+    def setTemplateImportSources(self, importSource : Union[AbstractTemplateImportSource, list]):
 
         self.templateImportSources = []
 

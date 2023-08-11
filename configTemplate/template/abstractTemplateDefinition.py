@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import re
+from typing import Union, Tuple
 
 class AbstractTemplateDefinition(ABC):
 
@@ -92,7 +93,7 @@ class AbstractTemplateDefinition(ABC):
         
         return False
     
-    def getTypeOfControlStructure(self, s : str) -> str | None:
+    def getTypeOfControlStructure(self, s : str) -> Union[str, None]:
 
         if (re.match(self.CONTROL_STRUCTURE_REGEX_IF, s)):
             return self.CONTROL_STRUCTURE_TYPE_IF
@@ -151,7 +152,7 @@ class AbstractTemplateDefinition(ABC):
 
         return self._getIfControlStructureReturnValue(self._getIfControlStructureParts(s)['else'])
     
-    def getForControlStructureCode(self, s : str) -> (str, str):
+    def getForControlStructureCode(self, s : str) -> Tuple[str, str]:
 
         if (self.getTypeOfControlStructure(s) == self.CONTROL_STRUCTURE_TYPE_FOR):
             

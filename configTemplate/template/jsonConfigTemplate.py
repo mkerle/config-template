@@ -5,6 +5,7 @@ from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDef
 
 import copy
 import logging
+from typing import Union, Tuple
 
 class JSONConfigTemplate(AbstractConfigTemplate):
 
@@ -19,7 +20,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         self.inheritedTemplateSources = inheritedTemplatesSources
         self.resolvedTemplates = {}
 
-    def _getxpathStr(self, index : str | int) -> str:
+    def _getxpathStr(self, index : Union[str, int]) -> str:
 
         if (type(index) == str):
             return '["%s"]' % index
@@ -54,12 +55,12 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         return callbackRetObj
 
-    def _addElementToFlatternedDict(self, obj, index : str | int, callbackRetObj : dict, xpath : str, *args, **kwargs) -> dict:
+    def _addElementToFlatternedDict(self, obj, index : Union[str, int], callbackRetObj : dict, xpath : str, *args, **kwargs) -> dict:
         
         callbackRetObj[xpath] = obj[index]
         return callbackRetObj
     
-    def _mergeAndUpdateV2(self, mergeData : dict | list, origData : dict | list, *args, **kwargs) -> dict | list:
+    def _mergeAndUpdateV2(self, mergeData : Union[dict, list], origData : Union[dict, list], *args, **kwargs) -> Union[dict, list]:
 
         if (type(mergeData) == dict):
 
@@ -226,7 +227,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                         
         return flatternedTemplate
     
-    def _stripXPathName(self, s : str) -> str | int:
+    def _stripXPathName(self, s : str) -> Union[str, int]:
 
         if ('"' in s):
             return s.replace('[', '').replace(']', '').replace('"', '')
