@@ -39,23 +39,23 @@ class AbstractEnvironment(ABC):
 
         return self.templateImportSources
     
-    def _getInheritedTemplateSources(self, templateSource : AbstractConfigTemplateSource, inheritedTemplateSources : dict) -> dict:
+    def _getImportetdTemplateSources(self, templateSource : AbstractConfigTemplateSource, importedTemplateSources : dict) -> dict:
 
-        for inheritedTemplate in templateSource.getTemplateInheritedTemplates():            
+        for importedTemplate in templateSource.getTemplateImports():            
 
-            inheritedTemplateName = inheritedTemplate['name']
+            importedTemplateName = importedTemplate['name']
             
-            logging.debug('AbstractEnvironment._getInheritedTemplateSources() -> Looing for inherited template: [%s]' % (inheritedTemplateName))
+            logging.debug('AbstractEnvironment._getImportetdTemplateSources() -> Looing for imported template: [%s]' % importedTemplateName)
 
-            inheritedTemplateSource = self._getTemplateSource(inheritedTemplateName)
+            importedTemplateSource = self._getTemplateSource(importedTemplateName)
 
-            if (inheritedTemplateSource is None):
-                raise Exception('Unable to find inherited template [name=%s]' % (inheritedTemplateName))
+            if (importedTemplateSource is None):
+                raise Exception('Unable to find imported template [name=%s]' % importedTemplateName)
             
-            inheritedTemplateSources[inheritedTemplateName] = inheritedTemplateSource
-            inheritedTemplateSources = self._getInheritedTemplateSources(inheritedTemplateSource, inheritedTemplateSources)
+            importedTemplateSources[importedTemplateName] = importedTemplateSource
+            importedTemplateSources = self._getImportetdTemplateSources(importedTemplateSource, importedTemplateSources)
 
-        return inheritedTemplateSources
+        return importedTemplateSources
     
     def _getTemplateSource(self, templateName : str) -> AbstractConfigTemplateSource:
 
@@ -77,8 +77,8 @@ class AbstractEnvironment(ABC):
         templateSource = self._getTemplateSource(templateName)
 
         if (templateSource is not None):
-            inheritedTemplateSources = self._getInheritedTemplateSources(templateSource, {})
-            return self.templateFactory.createTemplateFromSource(templateSource, inheritedTemplateSources, self.templateDefinition)
+            importedTemplateSources = self._getImportetdTemplateSources(templateSource, {})
+            return self.templateFactory.createTemplateFromSource(templateSource, importedTemplateSources, self.templateDefinition)
         
         return None
 

@@ -4,13 +4,13 @@ The `configTemplate` python library provides a method of generating templates.  
 
 The project is similar in usage to Jinja2 but with the following differences:
 - Templates can be written in compliant JSON - Jinja2 treats files as simple text files and therefore difficult to tell if your JSON has errors until it is rendered.
-- `configTemplate` can handle multiple inheritence within a single template source.  Jinja2 is limited to a single import and is limited in usage of that import (can only be inserted once).
+- `configTemplate` can handle multiple imports within a single template source.  Jinja2 is limited to a single import (inheritance) and is limited in usage of that import (can only be inserted once).
 - Templates are referenced by a `name` rather than the filename or path.
 
 # Features
 
 The library is still under development but has the following features:
-- inherit/import other template sources
+- import other template sources
 - `if` control structures
 - `for` loop control structures
 - define variables within the template to provide hints to template rendering
@@ -75,7 +75,7 @@ A JSON template source must define 3 fields:
 1. The template `version`
 1. The `template` body
 
-A template can optionally define the `inherited-templates` field that defines the names of templates that will be used when rendering.
+A template can optionally define the `imports` field that defines the names of templates that will be used when rendering.
 
 The basic structure is:
 
@@ -83,7 +83,7 @@ The basic structure is:
 {
     "name" : "My Template Name",
     "version" : 1,
-    "inherited-templates" : [
+    "imports" : [
         { "name" : "Some Other Template" }
     ],
     "template" : {
@@ -154,12 +154,12 @@ interfaceNames : [
 ]
 ```
 
-# Using Inherited Templates
+# Using Imported Templates
 
-To use inherited templates we need to ensure:
+To use imported templates we need to ensure:
 1. The template source can be found by the template `environment`.
-1. We include the template source `name` in the `inherited-templates` field.
-1. We use the `$_import_blocks` keyword to define where the inherited template will be inserted.
+1. We include the template source `name` in the `imports` field.
+1. We use the `$_import_blocks` keyword to define where the imported template(s) will be inserted.
 
 A simple example:
 
@@ -169,7 +169,7 @@ A simple example:
 {
     "name" : "Management Interface",
     "version" : 1,
-    "inherited-templates" : [],
+    "imports" : [],
     "template" : {
         "ip" : "{{settings.managementIP}}",
         "vlan" : 100,
@@ -184,7 +184,7 @@ A simple example:
 {
     "name" : "Device Template",
     "version" : 1,
-    "inherited-templates" : [
+    "imports" : [
         { "name" : "Management Interface" }
     ],
     "template" : {

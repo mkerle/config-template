@@ -42,4 +42,9 @@ class testDefaultEnvironment(TestCase):
         self.assertIsInstance(template, AbstractConfigTemplate)
 
         renderedTemplate = template.render(settings=DeviceSettings('device2'))
+
+        expectedResult = {'device-settings': {'name': 'device2', 'mode': 'proxy', 'mem-size': '1024'}, 'device-interfaces': [{'port': 'port1', 'vrf': 'DMZ', 'vlan': 100, 'name': 'DMZ-v100', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'DMZ', 'vlan': 101, 'name': 'DMZ-v101', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'CORP', 'vlan': 200, 'name': 'CORP-v200', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}]}
+
+        self.assertDictEqual(expectedResult, renderedTemplate)
+
         print(renderedTemplate)

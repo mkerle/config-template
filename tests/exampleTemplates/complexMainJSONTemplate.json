@@ -1,7 +1,7 @@
 {
     "name" : "Complex Main JSON Template",
     "version" : 1,
-    "inherited-templates" : [
+    "imports" : [
         { "name" : "Common Device Settings" },
         { "name" : "Common Interface Settings" }
     ],

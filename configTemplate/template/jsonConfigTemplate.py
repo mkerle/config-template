@@ -11,13 +11,13 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
     def __init__(self, 
                  mainTemplateSource : JSONConfigTemplateSource = None,
-                 inheritedTemplatesSources : dict = None,
+                 importedTemplatesSources : dict = None,
                  templateDefinition : AbstractTemplateDefinition = DefaultTemplateDefinition()):
         
-        super().__init__(mainTemplateSource, inheritedTemplatesSources, templateDefinition)
+        super().__init__(mainTemplateSource, importedTemplatesSources, templateDefinition)
 
         self.mainTemplateSource = mainTemplateSource
-        self.inheritedTemplateSources = inheritedTemplatesSources
+        self.importedTemplatesSources = importedTemplatesSources
         self.resolvedTemplates = {}
 
     def _getxpathStr(self, index : Union[str, int]) -> str:
@@ -67,13 +67,13 @@ class JSONConfigTemplate(AbstractConfigTemplate):
             for k in mergeData:
 
                 if (k == self.getTemplateDefinition().getImportBlockVariableName()):
-                    for inheritedTemplateSourceName in mergeData[k]:
-                        if (inheritedTemplateSourceName not in self.resolvedTemplates):
-                            if inheritedTemplateSourceName not in self.inheritedTemplateSources:
-                                raise Exception('Could not find inherited template source to resolve: [%s]' % (inheritedTemplateSourceName))
-                            self.resolveTemplateSource(self.inheritedTemplateSources[inheritedTemplateSourceName], *args, **kwargs)
+                    for importedTemplateSourceName in mergeData[k]:
+                        if (importedTemplateSourceName not in self.resolvedTemplates):
+                            if importedTemplateSourceName not in self.importedTemplatesSources:
+                                raise Exception('Could not find imported template source to resolve: [%s]' % importedTemplateSourceName)
+                            self.resolveTemplateSource(self.importedTemplatesSources[importedTemplateSourceName], *args, **kwargs)
                         
-                        origData = self._mergeAndUpdateV2(self.resolvedTemplates[inheritedTemplateSourceName], origData, *args, **kwargs)
+                        origData = self._mergeAndUpdateV2(self.resolvedTemplates[importedTemplateSourceName], origData, *args, **kwargs)
 
                 elif (k not in origData):
                     origData[k] = copy.deepcopy(mergeData[k])

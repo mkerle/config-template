@@ -3,7 +3,7 @@ from unittest import TestCase
 from tests.baseTest import EXAMPLE_TEMPLATE_DIR, \
                             BASIC_JSON_TEMPLATE_NAME, \
                             COMPLEX_MAIN_JSON_TEMPLATE_NAME, \
-                            MULTIPLE_INHERITANCE_JSON_TEMPLATE_NAME, \
+                            MULTIPLE_IMPORT_JSON_TEMPLATE_NAME, \
                             EXAMPLE_COMMON_TEMPLATE_DIR
 
 import os
@@ -34,8 +34,11 @@ class testMultipleInheritenceEnvironment(TestCase):
                                  templateDefinition=DefaultTemplateDefinition())
         self.assertIsNotNone(env, 'Environment is None')
 
-        template = env.getTemplate(MULTIPLE_INHERITANCE_JSON_TEMPLATE_NAME)
+        template = env.getTemplate(MULTIPLE_IMPORT_JSON_TEMPLATE_NAME)
         self.assertTrue(template is not None, 'Template from environment is none!')
 
         renderedTemplate = template.render()
+
+        expectedResult = {'name': 'Test', 'common-template-1': {'type': 'common1'}, 'common-template-2': {'types': ['common2']}}
+        self.assertDictEqual(expectedResult, renderedTemplate)
         print(renderedTemplate)

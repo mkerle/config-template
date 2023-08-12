@@ -54,14 +54,14 @@ class testJSONTemplateSource(TestCase):
         }
 
         template = JSONConfigTemplateSource(templateObj)
-        self.assertTrue(template.getTemplateInheritedTemplates() == [], 'getTemplateInheritedTemplates() should have returned empty list when not defined in template')
+        self.assertTrue(template.getTemplateImports() == [], 'getTemplateInheritedTemplates() should have returned empty list when not defined in template')
 
         templateObj['inherit-templates'] = {}
 
         self.assertRaises(Exception, JSONConfigTemplateSource.isValidTemplateData(templateObj), 'isValidTemplate() failed to raise exception for invalid type for inherit-templates')
 
         template = JSONConfigTemplateSource(templateObj)
-        self.assertRaises(Exception, template.getTemplateInheritedTemplates(), 'getTemplateInheritedTemplates() did not raise an exception for invalid inherit-templates type')
+        self.assertRaises(Exception, template.getTemplateImports(), 'getTemplateInheritedTemplates() did not raise an exception for invalid inherit-templates type')
 
         templateObj['inherit-templates'] = []
 

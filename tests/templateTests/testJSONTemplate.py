@@ -49,9 +49,9 @@ class testJSONTemplate(TestCase):
         template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {BASIC_CHILD_JSON_TEMPLATE_NAME : inheritedSource})
 
         self.assertIsInstance(template.mainTemplateSource, JSONConfigTemplateSource)
-        self.assertIsInstance(template.inheritedTemplateSources, dict)
-        self.assertIn(BASIC_CHILD_JSON_TEMPLATE_NAME, template.inheritedTemplateSources)
-        self.assertIsInstance(template.inheritedTemplateSources[BASIC_CHILD_JSON_TEMPLATE_NAME], JSONConfigTemplateSource)
+        self.assertIsInstance(template.importedTemplatesSources, dict)
+        self.assertIn(BASIC_CHILD_JSON_TEMPLATE_NAME, template.importedTemplatesSources)
+        self.assertIsInstance(template.importedTemplatesSources[BASIC_CHILD_JSON_TEMPLATE_NAME], JSONConfigTemplateSource)
 
         return template
 

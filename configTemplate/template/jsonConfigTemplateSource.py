@@ -1,12 +1,11 @@
 from configTemplate.template.abstractConfigTemplateSource import AbstractConfigTemplateSource
-from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
 
 class JSONConfigTemplateSource(AbstractConfigTemplateSource):
 
     FIELD_TEMPLATE_NAME = 'name'
     FIELD_TEMPLATE_VERSION = 'version'
     FIELD_TEMPLATE_DATA = 'template'
-    FIELD_TEMPLATE_INHERIT = 'inherited-templates'
+    FIELD_TEMPLATE_IMPORTS = 'imports'
 
     def __init__(self, 
                  templateData : dict = None):
@@ -53,14 +52,14 @@ class JSONConfigTemplateSource(AbstractConfigTemplateSource):
             
         return False
     
-    def _hasTemplateInheritedTemplates(templateObj : dict) -> bool:
+    def _hasTemplateImports(templateObj : dict) -> bool:
 
         if (JSONConfigTemplateSource._templateObjIsDict(templateObj)):
-            if (JSONConfigTemplateSource.FIELD_TEMPLATE_INHERIT in templateObj):
-                return type(templateObj[JSONConfigTemplateSource.FIELD_TEMPLATE_INHERIT]) == list
+            if (JSONConfigTemplateSource.FIELD_TEMPLATE_IMPORTS in templateObj):
+                return type(templateObj[JSONConfigTemplateSource.FIELD_TEMPLATE_IMPORTS]) == list
             
         else:
-            raise Exception('Template field [%s] is not of type list' % (JSONConfigTemplateSource.FIELD_TEMPLATE_INHERIT))
+            raise Exception('Template field [%s] is not of type list' % (JSONConfigTemplateSource.FIELD_TEMPLATE_IMPORTS))
             
         return False
 
@@ -85,12 +84,12 @@ class JSONConfigTemplateSource(AbstractConfigTemplateSource):
         
         raise Exception('No template data defined!')
     
-    def _getTemplateInheritedTemplates(templateObj : dict) -> list:
+    def _getTemplateImports(templateObj : dict) -> list:
 
-        if (JSONConfigTemplateSource._hasTemplateInheritedTemplates(templateObj)):
-            return templateObj[JSONConfigTemplateSource.FIELD_TEMPLATE_INHERIT]
+        if (JSONConfigTemplateSource._hasTemplateImports(templateObj)):
+            return templateObj[JSONConfigTemplateSource.FIELD_TEMPLATE_IMPORTS]
         
-        # inherited templates is optional - return empty list
+        # template imports is optional - return empty list
         return []
 
     def getTemplateName(self) -> str:
@@ -102,8 +101,8 @@ class JSONConfigTemplateSource(AbstractConfigTemplateSource):
     def getTemplateData(self) -> dict:
         return JSONConfigTemplateSource._getTemplateData(self.templateObj)
     
-    def getTemplateInheritedTemplates(self) -> list:
-        return JSONConfigTemplateSource._getTemplateInheritedTemplates(self.templateObj)
+    def getTemplateImports(self) -> list:
+        return JSONConfigTemplateSource._getTemplateImports(self.templateObj)
     
     def isValidTemplate(self) -> bool:
         return JSONConfigTemplateSource.isValidTemplateData(self.templateObj)
@@ -121,8 +120,8 @@ class JSONConfigTemplateSource(AbstractConfigTemplateSource):
             elif (not JSONConfigTemplateSource._hasTemplateData(templateData)):
                 return False
             
-            if (not JSONConfigTemplateSource._hasTemplateInheritedTemplates(templateData)):
-                # Inherited templates is optional - exception will be
+            if (not JSONConfigTemplateSource._hasTemplateImports(templateData)):
+                # Template Imports is optional - exception will be
                 # thrown if wrong type
                 pass
                                         

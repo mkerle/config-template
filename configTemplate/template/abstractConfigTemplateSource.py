@@ -30,7 +30,7 @@ class AbstractConfigTemplateSource(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def getTemplateInheritedTemplates(self) -> list:
+    def getTemplateImports(self) -> list:
         '''
         Returns a list of the inherited templates for the template source.
         Each element of the list is a dict.
