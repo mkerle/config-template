@@ -54,6 +54,33 @@ class testDictHelper(TestCase):
         result = dictHelper.getParentXpath(xpath)
         self.assertTrue(result == expectedResult, 'Returned result was %s' % (result))
 
+    def testGetParentXpathForKey(self):
+
+        xpath = None
+        expectedResult = None
+        result = dictHelper.getParentXpathForKey(xpath, 'foo')
+        self.assertTrue(result == expectedResult, 'Returned result was %s' % (result))
+
+        xpath = '$'
+        expectedResult = None
+        result = dictHelper.getParentXpathForKey(xpath, 'foo')
+        self.assertTrue(result == expectedResult, 'Returned result was %s' % (result))
+
+        xpath = '$["root"]["foo"]["bar"]["var1"]'
+        expectedResult = '$["root"]["foo"]'
+        result = dictHelper.getParentXpathForKey(xpath, 'foo')
+        self.assertTrue(result == expectedResult, 'Returned result was %s' % (result))
+
+        xpath = '$["root"]["foo"]["bar"]["var1"]'
+        expectedResult = None
+        result = dictHelper.getParentXpathForKey(xpath, 'var1')
+        self.assertTrue(result == expectedResult, 'Returned result was %s' % (result))
+
+        xpath = '$["root"]["foo"]["bar"]["var1"]'
+        expectedResult = '$'
+        result = dictHelper.getParentXpathForKey(xpath, '$')
+        self.assertTrue(result == expectedResult, 'Returned result was %s' % (result))
+
     def testGetDictFromFlatternedDict(self):
 
         flatDict = {
