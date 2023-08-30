@@ -97,4 +97,32 @@ class testJSONTemplate(TestCase):
         expectedResult = {'some-list': [{'name': 'object1'}, {'name': 'object2'}, {'name': 'object3'}]}
         self.assertDictEqual(expectedResult, renderedTemplate)
 
+    def testEdgeCaseTemplates(self):
 
+        templateData = {
+            'name' : 'Edge Case Test',
+            'version' : 1,
+            'imports' : [],
+            'template' : {
+                'emptyList' : [],
+                'emptyListInAList' : [ [] ],
+                'emptyDict' : {},
+                'listWithEmptyDict' : [ {} ]
+            }
+        }
+        templateSource = JSONConfigTemplateSource(templateData)
+
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, DefaultTemplateDefinition())
+
+        renderedTemplate = template.render()
+
+        print(renderedTemplate)
+
+        expectedResult = {
+            'emptyList' : [],
+            'emptyListInAList' : [ [] ],
+            'emptyDict' : {},
+            'listWithEmptyDict' : [ {} ]
+        }
+
+        self.assertDictEqual(expectedResult, renderedTemplate)

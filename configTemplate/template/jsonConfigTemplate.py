@@ -32,6 +32,11 @@ class JSONConfigTemplate(AbstractConfigTemplate):
     def _traverseObj(self, obj, callback, callbackRetObj : any, xpath : str, *args, **kwargs):
 
         if (type(obj) == dict):
+
+            if (len(obj) < 1):
+                # handle special cases for empty dicts
+                if (type(callbackRetObj) == dict):
+                    callbackRetObj[xpath] = {}
             
             for k in obj:
 
@@ -43,6 +48,12 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     callbackRetObj = callback(obj, k, callbackRetObj, objXpath, *args, **kwargs)
 
         elif (type(obj) == list):
+
+            if (len(obj) < 1):
+                # handle special cases for empty lists
+                if (type(callbackRetObj) == dict):
+                    callbackRetObj[xpath] = []
+
 
             for i in range(0, len(obj)):
 
