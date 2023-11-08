@@ -14,7 +14,9 @@ from tests.baseTest import BASIC_JSON_TEMPLATE_NAME, \
                             EXAMPLE_FOR_LOOP_TEMPLATE_PATH, \
                             EXAMPLE_FOR_LOOP_LIST_TEMPLATE_PATH, \
                             FOR_LOOP_LIST_JSON_TEMPLATE_NAME, \
-                            EXAMPLE_FOR_LOOP_LIST_COMPLEX_TEMPLATE_PATH
+                            EXAMPLE_FOR_LOOP_LIST_COMPLEX_TEMPLATE_PATH, \
+                            EXAMPLE_BASE_TEMPLATE_1_PATH, \
+                            COMMON_BASE_TEMPLATE_1
 
 from configTemplate.template.jsonConfigTemplate import JSONConfigTemplate
 from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
@@ -115,8 +117,9 @@ class testJSONTemplate(TestCase):
     def testForLoopListTemplateWithObject(self):
 
         templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_FOR_LOOP_LIST_COMPLEX_TEMPLATE_PATH)
+        inheritedTemplateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_BASE_TEMPLATE_1_PATH)
 
-        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, JSONTemplateDefinition())
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, { COMMON_BASE_TEMPLATE_1 : inheritedTemplateSource }, JSONTemplateDefinition())        
 
         class ChildObj(object):
 
@@ -140,7 +143,8 @@ class testJSONTemplate(TestCase):
 
         renderedTemplate = template.render(config=TemplateObj())
         
-        expectedResult = {'some-list': [{'name': 'object1', 'members': [1]}, {'name': 'object2', 'members': [123, 234]}, {'name': 'object3', 'members': []}]}
+        #print(renderedTemplate)
+        expectedResult = {'some-list': [{'name': 'object1', 'members': [1], 'common-template-1': {'type': 'common1'}}, {'name': 'object2', 'members': [123, 234], 'common-template-1': {'type': 'common1'}}, {'name': 'object3', 'members': [], 'common-template-1': {'type': 'common1'}}]}
         self.assertDictEqual(expectedResult, renderedTemplate)        
 
     def testEdgeCaseTemplates(self):

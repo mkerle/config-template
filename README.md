@@ -154,7 +154,9 @@ interfaceNames : [
 ]
 ```
 
-When using JSON templates and the `JSONTemplateDefinition` there is an additional way to define for loops which is useful repeating structured data.  This for loop needs to be defined in a list where the 1st element must define the for loop and the last element indicates the end of the loop.  Any elements between the 1st and last elements will be repeated for each data source returned.  This method of for loop supports nested loops and variables (if using nesting be sure to take care with loop variable names).  An example of this for loop is shown below:
+When using JSON templates and the `JSONTemplateDefinition` there is an additional way to define for loops which is useful repeating structured data.  This for loop needs to be defined in a list where the 1st element must define the for loop and the last element indicates the end of the loop.  Any elements between the 1st and last elements will be repeated for each data source returned.  This method of for loop supports nested loops and variables (if using nesting be sure to take care with loop variable names).  Import of templates is supported inside the for loop structure.
+
+An example of this for loop is shown below:
 
 ```json
 "some-list" : [
@@ -168,7 +170,8 @@ When using JSON templates and the `JSONTemplateDefinition` there is an additiona
                     "{{obj.id}}",
                     "{% endfor %}"
                 ]
-            ]
+            ],
+            "$_import_blocks" : [ "Common Template 1" ]
         },
         "{% endfor %}"
     ]

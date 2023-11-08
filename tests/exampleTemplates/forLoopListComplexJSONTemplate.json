@@ -1,7 +1,9 @@
 {
     "name" : "For Loop List Complex JSON Template",
     "version" : 1,
-    "imports" : [],
+    "imports" : [
+        { "name" : "Common Template 1" }
+    ],
     "template" : {
         "some-list" : [
             [
@@ -13,8 +15,9 @@
                             "{% for obj in {{data.getMembers}} %}",
                             "{{obj.id}}",
                             "{% endfor %}"
-                        ]
-                    ]
+                        ]                        
+                    ],
+                    "$_import_blocks" : [ "Common Template 1" ]
                 },
                 "{% endfor %}"
             ]
