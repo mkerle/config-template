@@ -95,11 +95,13 @@ class AbstractTemplateDefinition(ABC):
     
     def getTypeOfControlStructure(self, s : str) -> Union[str, None]:
 
-        if (re.match(self.CONTROL_STRUCTURE_REGEX_IF, s)):
-            return self.CONTROL_STRUCTURE_TYPE_IF
-        
-        if (re.match(self.CONTROL_STRUCTURE_REGEX_FOR, s)):
-            return self.CONTROL_STRUCTURE_TYPE_FOR
+        if (type(s) == str):
+
+            if (re.match(self.CONTROL_STRUCTURE_REGEX_IF, s)):
+                return self.CONTROL_STRUCTURE_TYPE_IF
+            
+            if (re.match(self.CONTROL_STRUCTURE_REGEX_FOR, s)):
+                return self.CONTROL_STRUCTURE_TYPE_FOR
         
         return None
     

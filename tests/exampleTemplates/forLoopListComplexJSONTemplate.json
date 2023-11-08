@@ -1,0 +1,23 @@
+{
+    "name" : "For Loop List Complex JSON Template",
+    "version" : 1,
+    "imports" : [],
+    "template" : {
+        "some-list" : [
+            [
+                "{% for data in {{config.getData}} %}",
+                {
+                    "name" : "{{data.getName}}",
+                    "members" : [
+                        [
+                            "{% for obj in {{data.getMembers}} %}",
+                            "{{obj.id}}",
+                            "{% endfor %}"
+                        ]
+                    ]
+                },
+                "{% endfor %}"
+            ]
+        ]
+    }
+}

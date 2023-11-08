@@ -1,7 +1,7 @@
 from configTemplate.template.abstractConfigTemplate import AbstractConfigTemplate
 from configTemplate.template.jsonConfigTemplateSource import JSONConfigTemplateSource
 from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
-from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
+from configTemplate.template.jsonTemplateDefinition import JSONTemplateDefinition
 
 import copy
 import logging
@@ -12,7 +12,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
     def __init__(self, 
                  mainTemplateSource : JSONConfigTemplateSource = None,
                  importedTemplatesSources : dict = None,
-                 templateDefinition : AbstractTemplateDefinition = DefaultTemplateDefinition()):
+                 templateDefinition : AbstractTemplateDefinition = JSONTemplateDefinition()):
         
         super().__init__(mainTemplateSource, importedTemplatesSources, templateDefinition)
 
@@ -70,6 +70,30 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         
         callbackRetObj[xpath] = obj[index]
         return callbackRetObj
+
+    def _loopCallbackMerge(self, *args, **kwargs) -> list:
+
+        if ('loopData' not in kwargs):
+            raise Exception('Expected to find "loopData" in kwargs but it was not found.')
+
+        mergeData = kwargs['loopData']
+
+        if (type(mergeData) == list):
+            
+            localMergeData = { 'mergedata' : mergeData  }
+
+            localMergedData = self._mergeAndUpdateV2(localMergeData, copy.deepcopy(localMergeData), *args, **kwargs)
+
+            flatternedTemplate = self.flatternResolvedTemplate(localMergedData)
+
+            variableResolvedTemplate = self.resolveTemplateVariables(flatternedTemplate, *args, **kwargs)        
+
+            unflatternedTemplate = self.unflatternTemplate(variableResolvedTemplate, localMergedData)
+
+            return unflatternedTemplate['mergedata']
+
+        raise Exception('kwargs["loopData"] was expected to be of type list.  Instead found type=%s' % (str(type(mergeData))))
+
     
     def _mergeAndUpdateV2(self, mergeData : Union[dict, list], origData : Union[dict, list], *args, **kwargs) -> Union[dict, list]:
 
@@ -95,9 +119,14 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
             for listVal in mergeData:
 
+                skipPostMerge = False
+
                 if (type(listVal) == str and self.getTemplateDefinition().getTypeOfControlStructure(listVal) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_FOR):
 
                     code, dataSrcVariable = self.getTemplateDefinition().getForControlStructureCode(listVal)
+
+                    if (code is None or dataSrcVariable is None):
+                        raise Exception('Failed to generate for loop code from: %s' % (listVal))
                     
                     if (self.getTemplateDefinition().hasTemplateVariable(dataSrcVariable)):
                         localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
@@ -121,11 +150,47 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     if (listVal in origData):
                         origData.remove(listVal)
 
+                elif (type(listVal) == list and self.getTemplateDefinition().getTypeOfControlStructure(listVal) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_FOR):
+
+                    code, dataSrcVariable = self.getTemplateDefinition().getForListControlStructureCode(listVal)
+
+                    if (code is None or dataSrcVariable is None):
+                        raise Exception('Failed to generate for loop code from list: %s' % (listVal))
+
+                    if (self.getTemplateDefinition().hasTemplateVariable(dataSrcVariable)):
+                        localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
+                        dataSrc = self._evaluateVariable(dataSrcVariable[2:-2], '$', localFlatternedTemplate, *args, **kwargs)
+                    else:
+                        dataSrc = eval(dataSrcVariable)
+
+                    retVals = []
+                    globals = {
+                        self.getTemplateDefinition().CONTROL_STRUCTURE_DATASRC_FOR : dataSrc, 
+                        self.getTemplateDefinition().CONTROL_STRUCTURE_RETVAL_FOR : retVals,
+                        'loopCallback' : self._loopCallbackMerge
+                    }
+                    
+                    exec(code, globals)
+
+                    if (type(globals[self.getTemplateDefinition().CONTROL_STRUCTURE_RETVAL_FOR]) == list):
+                        origData += globals[self.getTemplateDefinition().CONTROL_STRUCTURE_RETVAL_FOR]                        
+                    else:
+                        raise Exception('Dont know how to handle type %s from for loop control structure (list)' % (str(type(retVals))))
+                    
+                    if (listVal in origData):                        
+                        origData.remove(listVal)
+
+                    # processing of for loop from list syntax will
+                    # have already taken care of the merge process
+                    # for any dynamiclly created child objects.
+                    # skip this at the end
+                    skipPostMerge = True
+
                 elif (listVal not in origData):
 
                     origData.append(listVal)
 
-                if (type(listVal) in [dict, list]):
+                if (type(listVal) in [dict, list] and not skipPostMerge):
                     mergeDataListValObj = mergeData[mergeData.index(listVal)]
                     origDataListValObj = origData[origData.index(listVal)]
 

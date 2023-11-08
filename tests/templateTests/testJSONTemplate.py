@@ -11,11 +11,15 @@ from tests.baseTest import BASIC_JSON_TEMPLATE_NAME, \
                             EXAMPLE_COMPLEX_COMMON_INTERFACE_TEMPLATE_PATH, \
                             COMMON_INTERFACE_JSON_TEMPLATE_NAME, \
                             FOR_LOOP_JSON_TEMPLATE_NAME, \
-                            EXAMPLE_FOR_LOOP_TEMPLATE_PATH
+                            EXAMPLE_FOR_LOOP_TEMPLATE_PATH, \
+                            EXAMPLE_FOR_LOOP_LIST_TEMPLATE_PATH, \
+                            FOR_LOOP_LIST_JSON_TEMPLATE_NAME, \
+                            EXAMPLE_FOR_LOOP_LIST_COMPLEX_TEMPLATE_PATH
 
 from configTemplate.template.jsonConfigTemplate import JSONConfigTemplate
 from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
 from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
+from configTemplate.template.jsonTemplateDefinition import JSONTemplateDefinition
 from configTemplate.template.jsonConfigTemplateSource import JSONConfigTemplateSource
 from configTemplate.template.jsonFileConfigTemplateSourceFactory import JSONFileConfigTemplateSourceFactory
 
@@ -90,12 +94,54 @@ class testJSONTemplate(TestCase):
 
         templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_FOR_LOOP_TEMPLATE_PATH)
 
-        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, DefaultTemplateDefinition())
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, JSONTemplateDefinition())
 
         renderedTemplate = template.render(myData=[{'name' : 'object1'}, {'name' : 'object2'}, {'name' : 'object3'}])
         
         expectedResult = {'some-list': [{'name': 'object1'}, {'name': 'object2'}, {'name': 'object3'}]}
         self.assertDictEqual(expectedResult, renderedTemplate)
+
+    def testForLoopListTemplate(self):
+
+        templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_FOR_LOOP_LIST_TEMPLATE_PATH)
+
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, JSONTemplateDefinition())
+
+        renderedTemplate = template.render(myData=[{'name' : 'object1'}, {'name' : 'object2'}, {'name' : 'object3'}])
+        
+        expectedResult = {'some-list': [{'name': 'object1'}, {'name': 'object2'}, {'name': 'object3'}]}
+        self.assertDictEqual(expectedResult, renderedTemplate)
+
+    def testForLoopListTemplateWithObject(self):
+
+        templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_FOR_LOOP_LIST_COMPLEX_TEMPLATE_PATH)
+
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, JSONTemplateDefinition())
+
+        class ChildObj(object):
+
+            def __init__(self, name : str, ids : list[dict]):
+                self.name = name
+                self.ids = ids
+
+            def getName(self, xpath, flatternedTemplate, *args, **kwargs) -> str:
+
+                return self.name
+
+            def getMembers(self, xpath, flatternedTemplate, *args, **kwargs) -> list:
+
+                return self.ids
+
+        class TemplateObj(object):
+
+            def getData(self, xpath, flatternedTemplate, *args, **kwargs) -> list:
+
+                return [ ChildObj('object1', [{'id' : 1}]), ChildObj('object2', [{'id' : 123}, {'id':234}]), ChildObj('object3', []) ]
+
+        renderedTemplate = template.render(config=TemplateObj())
+        
+        expectedResult = {'some-list': [{'name': 'object1', 'members': [1]}, {'name': 'object2', 'members': [123, 234]}, {'name': 'object3', 'members': []}]}
+        self.assertDictEqual(expectedResult, renderedTemplate)        
 
     def testEdgeCaseTemplates(self):
 
@@ -112,7 +158,7 @@ class testJSONTemplate(TestCase):
         }
         templateSource = JSONConfigTemplateSource(templateData)
 
-        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, DefaultTemplateDefinition())
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, {}, JSONTemplateDefinition())
 
         renderedTemplate = template.render()
 

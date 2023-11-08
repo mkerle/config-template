@@ -1,0 +1,16 @@
+{
+    "name" : "For Loop List JSON Template",
+    "version" : 1,
+    "imports" : [],
+    "template" : {
+        "some-list" : [
+            [
+                "{% for data in {{myData}} %}",
+                {
+                    "name" : "{{data.name}}"
+                },
+                "{% endfor %}"
+            ]
+        ]
+    }
+}

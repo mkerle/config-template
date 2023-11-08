@@ -39,7 +39,7 @@ from configTemplate.environment.defaultEnvironment import DefaultEnvironment
 from configTemplate.importSource.directoryTemplateImportSource import DirectoryTemplateImportSource
 from configTemplate.template.jsonFileConfigTemplateSourceFactory import JSONFileConfigTemplateSourceFactory
 from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
-from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
+from configTemplate.template.jsonTemplateDefinition import JSONTemplateDefinition
 ```
 
 We then need to define where we are going to import our JSON template sources from using the `DirectoryTemplateImportSource` module.  The constructor takes a path to the template sources and a Factory class that will be used to create `JSONConfigTemplateSource` objects.
@@ -48,18 +48,18 @@ We then need to define where we are going to import our JSON template sources fr
 importSource = DirectoryTemplateImportSource('./path/to/my/templates', JSONFileConfigTemplateSourceFactory)
 ```
 
-With our `importSource` we can create a template environment using `DefaultEnvironment`.  The environment takes the import source, a Factory method to create templates (`JSONConfigTemplate`) as well as a template definition (`DefaultTemplateDefinition`).
+With our `importSource` we can create a template environment using `DefaultEnvironment`.  The environment takes the import source, a Factory method to create templates (`JSONConfigTemplate`) as well as a template definition (`JSONTemplateDefinition`).
 
 ```python
 env = DefaultEnvironment(importSource=importSources,
                             templateFactory=JSONConfigTemplateFactory,
-                            templateDefinition=DefaultTemplateDefinition())
+                            templateDefinition=JSONTemplateDefinition())
 ```
 
 We can now get our template object from the environment using the `name` of the template.
 
 ```python
-template = env.getTempalte('My Template Name')
+template = env.getTemplate('My Template Name')
 ```
 
 Finially we can render the template by specifiying arguments to help generate the final template.
@@ -151,6 +151,27 @@ An example use of a for loop could be:
 ...
 interfaceNames : [
     "{% for interfaceObj in {{device.getInterfaces}} do interfaceObj.name %}"
+]
+```
+
+When using JSON templates and the `JSONTemplateDefinition` there is an additional way to define for loops which is useful repeating structured data.  This for loop needs to be defined in a list where the 1st element must define the for loop and the last element indicates the end of the loop.  Any elements between the 1st and last elements will be repeated for each data source returned.  This method of for loop supports nested loops and variables (if using nesting be sure to take care with loop variable names).  An example of this for loop is shown below:
+
+```json
+"some-list" : [
+    [
+        "{% for data in {{config.getData}} %}",
+        {
+            "name" : "{{data.getName}}",
+            "members" : [
+                [
+                    "{% for obj in {{data.getMembers}} %}",
+                    "{{obj.id}}",
+                    "{% endfor %}"
+                ]
+            ]
+        },
+        "{% endfor %}"
+    ]
 ]
 ```
 
