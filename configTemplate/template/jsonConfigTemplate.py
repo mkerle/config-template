@@ -82,7 +82,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
             
             localMergeData = { 'mergedata' : mergeData  }
 
-            localMergedData = self._mergeAndUpdateV2(localMergeData, copy.deepcopy(localMergeData), *args, **kwargs)
+            localMergedData = self._resolveControlStructures(localMergeData, copy.deepcopy(localMergeData), *args, **kwargs)
 
             flatternedTemplate = self.flatternResolvedTemplate(localMergedData)
 
@@ -94,26 +94,84 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         raise Exception('kwargs["loopData"] was expected to be of type list.  Instead found type=%s' % (str(type(mergeData))))
 
-    
-    def _mergeAndUpdateV2(self, mergeData : Union[dict, list], origData : Union[dict, list], *args, **kwargs) -> Union[dict, list]:
+    def _resolveImports(self, mergeData : Union[dict, list], origData : Union[dict, list]) -> Union[dict, list]:
+        '''
+        This method will return origData with all import statements replaced 
+        with the imported template content.
+        mergeData in most cases will be the same as origData when the method 
+        is initially called and origData wil be modified as import statements
+        are found and processed.
+        '''
 
         if (type(mergeData) == dict):
 
             for k in mergeData:
 
-                if (k == self.getTemplateDefinition().getImportBlockVariableName()):
+                if (k == self.getTemplateDefinition().getImportBlockVariableName()):                    
+
                     for importedTemplateSourceName in mergeData[k]:
                         if (importedTemplateSourceName not in self.resolvedTemplates):
                             if importedTemplateSourceName not in self.importedTemplatesSources:
                                 raise Exception('Could not find imported template source to resolve: [%s]' % importedTemplateSourceName)
-                            self.resolveTemplateSource(self.importedTemplatesSources[importedTemplateSourceName], *args, **kwargs)
-                        
-                        origData = self._mergeAndUpdateV2(self.resolvedTemplates[importedTemplateSourceName], origData, *args, **kwargs)
+
+                            self.resolvedTemplates[importedTemplateSourceName] = self._resolveImports(self.importedTemplatesSources[importedTemplateSourceName].getTemplateData(), copy.deepcopy(self.importedTemplatesSources[importedTemplateSourceName].getTemplateData()))
+                                                
+                        origData = self._resolveImports(self.resolvedTemplates[importedTemplateSourceName], origData)
+
+                    del origData[k]
 
                 elif (k not in origData):
+
+                    if (type(mergeData[k]) in [dict, list]):
+
+                        origData[k] = self._resolveImports(mergeData[k], copy.deepcopy(mergeData[k]))
+
+                    else:
+
+                        origData[k] = mergeData[k]
+
+                else:
+
+                    if (type(mergeData[k]) in [dict, list]):
+
+                        origData[k] = self._resolveImports(mergeData[k], copy.deepcopy(mergeData[k]))
+
+
+        elif (type(mergeData) == list):
+
+            for listval in mergeData:
+
+                if (type(listval) in [list, dict]):
+
+                    origListObject = origData[origData.index(listval)]
+                    mergeListObject = mergeData[mergeData.index(listval)]
+
+                    origData[origData.index(listval)] = self._resolveImports(mergeListObject, copy.deepcopy(origListObject))
+
+                elif (listval not in origData):
+
+                    origData.append(listval)
+
+        return origData
+
+    
+    def _resolveControlStructures(self, mergeData : Union[dict, list], origData : Union[dict, list], *args, **kwargs) -> Union[dict, list]:
+        '''
+        This method will return origData with all control structure statements 
+        executed and replaced with template data content.
+        mergeData in most cases will be the same as origData when the method 
+        is initially called and origData wil be modified as the control stucture
+        statements are found and processed.        
+        '''
+
+        if (type(mergeData) == dict):
+
+            for k in mergeData:
+
+                if (k not in origData):
                     origData[k] = copy.deepcopy(mergeData[k])
 
-                origData[k] = self._mergeAndUpdateV2(mergeData[k], origData[k], *args, **kwargs)
+                origData[k] = self._resolveControlStructures(mergeData[k], origData[k], *args, **kwargs)
 
         elif (type(mergeData) == list):
 
@@ -194,7 +252,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     mergeDataListValObj = mergeData[mergeData.index(listVal)]
                     origDataListValObj = origData[origData.index(listVal)]
 
-                    origDataListValObj = self._mergeAndUpdateV2(mergeDataListValObj, origDataListValObj, *args, **kwargs)
+                    origDataListValObj = self._resolveControlStructures(mergeDataListValObj, origDataListValObj, *args, **kwargs)
 
         return origData
 
@@ -205,13 +263,29 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
             logging.info('jsonConfigTemplate.resolveTemplateSource() -> Resolving template source [%s]...' % (templateSource.getTemplateName()))           
 
-            resolvedTemplate = self._mergeAndUpdateV2(templateSource.getTemplateData(), copy.deepcopy(templateSource.getTemplateData()), *args, **kwargs)
+            resolvedTemplate = self._resolveImports(templateSource.getTemplateData(), copy.deepcopy(templateSource.getTemplateData()))
 
             self.resolvedTemplates[templateSource.getTemplateName()] = resolvedTemplate
 
         else:
 
             logging.info('jsonConfigTemplate.resolveTemplateSource() -> Template source [%s] already resolved' % (templateSource.getTemplateName()))
+
+    def resolveTemplateControlStructures(self, *args, **kwargs):
+
+        mainTemplateName = self.mainTemplateSource.getTemplateName()
+        mainTemplateData = self.resolvedTemplates[mainTemplateName]
+
+        if (mainTemplateData is not None):
+
+            logging.info('jsonConfigTemplate.resolveTemplateControlStructures() -> Resolving template control structures [%s]...' % (mainTemplateName))
+
+            self.resolvedTemplates[self.mainTemplateSource.getTemplateName()] = self._resolveControlStructures(mainTemplateData, copy.deepcopy(mainTemplateData), *args, **kwargs)
+
+        else:
+
+            logging.error('jsonConfigTemplate.resolveTemplateControlStructures() -> The main template was not found in the resolved templates: "%s"' % (mainTemplateName))
+
 
 
     def flatternResolvedTemplate(self, resolvedTemplate : dict) -> dict:
@@ -274,7 +348,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                         if (self.getTemplateDefinition().getTypeOfControlStructure(val) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_IF):
                         
-                            condition = self.getTemplateDefinition().getIfControlStructureCondition(val)                        
+                            condition = self.getTemplateDefinition().getIfControlStructureCondition(val)
 
                             evaluatedCondition = self._evaluateVariable(condition, xpath, flatternedTemplate, *args, **kwargs)
 
@@ -289,8 +363,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                                 else:
                                     flatternedTemplate[xpath] = retVal
                             
-                        else:
-                            raise Exception('Evaluated logic condition did not return a boolean type: %s' % (condition))
+                            else:
+                                raise Exception('Evaluated logic condition did not return a boolean type: %s' % (condition))
 
                     elif (self.getTemplateDefinition().hasTemplateVariable(val)):
 
@@ -375,6 +449,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         self.resolvedTemplates = {}
         self.resolveTemplateSource(self.mainTemplateSource, *args, **kwargs)
+        self.resolveTemplateControlStructures(self.mainTemplateSource, *args, **kwargs)
 
         flatternedTemplate = self.flatternResolvedTemplate(self.resolvedTemplates[self.mainTemplateSource.getTemplateName()])
 

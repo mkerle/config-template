@@ -156,8 +156,8 @@ class testJSONTemplate(TestCase):
 
         renderedTemplate = template.render(config=TemplateObj())
         
-        print(json.dumps(renderedTemplate, indent=4))
-        expectedResult = {'some-list': [{'name': 'object1', 'members': [1], 'common-template-1': {'type': 'common1'}}, {'name': 'object2', 'members': [123, 234], 'common-template-1': {'type': 'common1'}}, {'name': 'object3', 'members': [], 'common-template-1': {'type': 'common1'}}]}
+        #print(renderedTemplate)
+        expectedResult = {'some-list': [{'name': 'object1', 'members': [1], 'common-template-1': {'type': 'common1'}}, {'name': 'object2', 'members': [123, 234], 'common-template-1': {'type': 'common1'}}, {'name': 'object3', 'members': [], 'common-template-1': {'type': 'common1'}}, {'name': 'objectA', 'members': ['abc'], 'common-template-1': {'type': 'common1'}}, {'name': 'objectB', 'members': ['asdf', 'xyz'], 'common-template-1': {'type': 'common1'}}, {'name': 'objectC', 'members': [], 'common-template-1': {'type': 'common1'}}, {'name': 'object1', 'common-template-1': {'type': 'common1'}, 'import-member': [{'id': 1}]}, {'name': 'object2', 'common-template-1': {'type': 'common1'}, 'import-member': [{'id': 123}, {'id': 234}]}, {'name': 'object3', 'common-template-1': {'type': 'common1'}, 'import-member': []}, {'name': 'objectA', 'common-template-1': {'type': 'common1'}, 'import-member': [{'id': 'abc'}]}, {'name': 'objectB', 'common-template-1': {'type': 'common1'}, 'import-member': [{'id': 'asdf'}, {'id': 'xyz'}]}, {'name': 'objectC', 'common-template-1': {'type': 'common1'}, 'import-member': []}]}
         self.assertDictEqual(expectedResult, renderedTemplate)        
 
     def testEdgeCaseTemplates(self):
@@ -179,7 +179,7 @@ class testJSONTemplate(TestCase):
 
         renderedTemplate = template.render()
 
-        print(renderedTemplate)
+        #print(renderedTemplate)
 
         expectedResult = {
             'emptyList' : [],
