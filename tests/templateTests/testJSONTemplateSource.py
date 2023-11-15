@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-import baseTemplateTest
+from tests.templateTests import baseTemplateTest
 
 from configTemplate.template.jsonConfigTemplateSource import JSONConfigTemplateSource
 

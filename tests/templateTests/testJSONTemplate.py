@@ -1,4 +1,5 @@
 from unittest import TestCase
+import json
 
 from tests.baseTest import BASIC_JSON_TEMPLATE_NAME, \
                             EXAMPLE_BASIC_TEMPLATE_PATH, \
@@ -16,7 +17,9 @@ from tests.baseTest import BASIC_JSON_TEMPLATE_NAME, \
                             FOR_LOOP_LIST_JSON_TEMPLATE_NAME, \
                             EXAMPLE_FOR_LOOP_LIST_COMPLEX_TEMPLATE_PATH, \
                             EXAMPLE_BASE_TEMPLATE_1_PATH, \
-                            COMMON_BASE_TEMPLATE_1
+                            COMMON_BASE_TEMPLATE_1, \
+                            EXAMPLE_FOR_LOOP_INLINE_TEMPLATE_PATH, \
+                            FOR_LOOP_INLINE_TEMPLATE_NAME
 
 from configTemplate.template.jsonConfigTemplate import JSONConfigTemplate
 from configTemplate.template.jsonConfigTemplateFactory import JSONConfigTemplateFactory
@@ -118,8 +121,14 @@ class testJSONTemplate(TestCase):
 
         templateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_FOR_LOOP_LIST_COMPLEX_TEMPLATE_PATH)
         inheritedTemplateSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_BASE_TEMPLATE_1_PATH)
+        inlineForLoopSource = JSONFileConfigTemplateSourceFactory.createTemplateSource(EXAMPLE_FOR_LOOP_INLINE_TEMPLATE_PATH)
 
-        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, { COMMON_BASE_TEMPLATE_1 : inheritedTemplateSource }, JSONTemplateDefinition())        
+        importedTemplates = {
+            COMMON_BASE_TEMPLATE_1 : inheritedTemplateSource,
+            FOR_LOOP_INLINE_TEMPLATE_NAME : inlineForLoopSource
+        }
+
+        template = JSONConfigTemplateFactory.createTemplateFromSource(templateSource, importedTemplates, JSONTemplateDefinition())        
 
         class ChildObj(object):
 
@@ -140,10 +149,14 @@ class testJSONTemplate(TestCase):
             def getData(self, xpath, flatternedTemplate, *args, **kwargs) -> list:
 
                 return [ ChildObj('object1', [{'id' : 1}]), ChildObj('object2', [{'id' : 123}, {'id':234}]), ChildObj('object3', []) ]
+            
+            def getOtherData(self, xpath, flatternedTemplate, *args, **kwargs) -> list:
+
+                return [ ChildObj('objectA', [{'id' : 'abc'}]), ChildObj('objectB', [{'id' : 'asdf'}, {'id': 'xyz'}]), ChildObj('objectC', []) ]
 
         renderedTemplate = template.render(config=TemplateObj())
         
-        #print(renderedTemplate)
+        print(json.dumps(renderedTemplate, indent=4))
         expectedResult = {'some-list': [{'name': 'object1', 'members': [1], 'common-template-1': {'type': 'common1'}}, {'name': 'object2', 'members': [123, 234], 'common-template-1': {'type': 'common1'}}, {'name': 'object3', 'members': [], 'common-template-1': {'type': 'common1'}}]}
         self.assertDictEqual(expectedResult, renderedTemplate)        
 

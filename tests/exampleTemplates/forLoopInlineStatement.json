@@ -1,0 +1,8 @@
+{
+    "name" : "For Loop Inline statement",
+    "version" : 1,
+    "imports" : [],
+    "template" : {
+        "import-member" : [ "{% for obj in {{data.getMembers}} do obj %}" ]
+    }
+}
