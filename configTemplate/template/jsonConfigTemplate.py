@@ -120,7 +120,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                     del origData[k]
 
-                elif (k not in origData):
+                elif (k not in origData):                    
 
                     if (type(mergeData[k]) in [dict, list]):
 
@@ -134,7 +134,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                     if (type(mergeData[k]) in [dict, list]):
 
-                        origData[k] = self._resolveImports(mergeData[k], copy.deepcopy(mergeData[k]))
+                        origData[k] = self._resolveImports(mergeData[k], copy.deepcopy(origData[k]))
 
 
         elif (type(mergeData) == list):

@@ -71,12 +71,14 @@ class testJSONTemplate(TestCase):
 
     def testRenderJSONTemplateWithInheritedSource(self):
 
-        expectedRenderedTemplate = {'device-settings': {'name': 'device1', 'mode': 'proxy', 'mem-size': '1024'}, 'flattern-test': {'some-list': ['a', 'b', 99, {'list-name': 'some-list-name', 'sub-list': ['foo', 'bar']}, ['69']], 'x': 'y'}}
+        expectedRenderedTemplate = {'device-settings': {'name': 'device1', 'mode': 'proxy', 'logging': {'remote-server1': '192.168.254.253'}, 'mem-size': '1024'}, 'flattern-test': {'some-list': ['a', 'b', 99, {'list-name': 'some-list-name', 'sub-list': ['foo', 'bar']}, ['69']], 'x': 'y'}}
 
         template = self._setupAndTestBasicInheritedTemplate()
 
         settings = {'name' : 'device1'}
         renderedTemplate = template.render(settings=settings)
+
+        #print(renderedTemplate)
 
         self.assertDictEqual(expectedRenderedTemplate, renderedTemplate, 'Rendered template is not as expected.')
         
@@ -92,7 +94,9 @@ class testJSONTemplate(TestCase):
 
         renderedTemplate = template.render(settings=DeviceSettings('device2'))
 
-        expectedResult = {'device-settings': {'name': 'device2', 'mode': 'proxy', 'mem-size': '1024'}, 'device-interfaces': [{'port': 'port1', 'vrf': 'DMZ', 'vlan': 100, 'name': 'DMZ-v100', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'DMZ', 'vlan': 101, 'name': 'DMZ-v101', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'CORP', 'vlan': 200, 'name': 'CORP-v200', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}]}
+        #print(renderedTemplate)
+
+        expectedResult = {'device-settings': {'name': 'device2', 'mode': 'proxy', 'logging': {'remote-server2': '192.168.255.253', 'remote-server1': '192.168.254.253'}, 'mem-size': '1024'}, 'device-interfaces': [{'port': 'port1', 'vrf': 'DMZ', 'vlan': 100, 'name': 'DMZ-v100', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'DMZ', 'vlan': 101, 'name': 'DMZ-v101', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'CORP', 'vlan': 200, 'name': 'CORP-v200', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}]}
         self.assertDictEqual(expectedResult, renderedTemplate)
 
     def testForLoopTemplate(self):

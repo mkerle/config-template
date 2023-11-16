@@ -1,7 +1,10 @@
 {
     "name" : "Common Device Settings",
     "version" : 1,
-    "template" : {           
+    "template" : {
+        "logging" : {
+            "remote-server1" : "192.168.254.253"
+        },
         "mem-size" : "1024"
     }
 }

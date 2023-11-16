@@ -10,7 +10,10 @@
         "device-settings" : {
             "$_import_blocks" : [ "Common Device Settings" ],            
             "name" : "{{settings.name}}",
-            "mode" : "proxy"
+            "mode" : "proxy",
+            "logging" : {
+                "remote-server2" : "192.168.255.253"
+            }
         },
         "device-interfaces" : [
             {
