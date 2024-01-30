@@ -19,6 +19,7 @@ class AbstractTemplateDefinition(ABC):
         self._templateVariablePrefix = '$_var_'
         self._importBlocks = '$_import_blocks'
         self._appendToList = '$_append_to_list'
+        self._mergeListWithParent = '$_merge_list_with_parent'
         self._variableStart = '{{'
         self._variableEnd = '}}'
         self._controlStructureStart = '{%'
@@ -41,6 +42,12 @@ class AbstractTemplateDefinition(ABC):
 
     def getAppendToListVariableName(self) -> str:
         return self._appendToList
+    
+    def setMergeListWithParentVariableName(self, mergeWithParentVariable : str):
+        self._mergeListWithParent = mergeWithParentVariable
+
+    def getMergeListWithParentVariableName(self) -> str:
+        return self._mergeListWithParent
 
     def setVariableStart(self, variableStart : str):
         self._variableStart = variableStart

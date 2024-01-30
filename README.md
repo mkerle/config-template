@@ -178,6 +178,16 @@ An example of this for loop is shown below:
 ]
 ```
 
+# Other Built-in Functions
+
+Details of other built-in functions are described in the table below.
+
+
+| Built-in | Description | Usage |
+|----------| ------------|-------|
+| `$_merge_list_with_parent` | The use of this bult-in is useful in JSON templates where a child template that is imported needs to merge with an existing list in order to maintain properly defined JSON documents.  In other template formats this built-in may not have any use or benifet. | `{ "$_merge_list_with_parent" : [ "the", "list", "data", "to", "merge" ] }`
+
+
 # Using Imported Templates
 
 To use imported templates we need to ensure:

@@ -244,6 +244,25 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     # skip this at the end
                     skipPostMerge = True
 
+                elif (type(listVal) == dict and self.getTemplateDefinition().getMergeListWithParentVariableName() in listVal):                    
+
+                    listToMerge = listVal[self.getTemplateDefinition().getMergeListWithParentVariableName()]
+
+                    if (not type(listToMerge) == list):
+                        raise Exception('"%s" should be a list! Instead found %s' % (self.getTemplateDefinition().getMergeListWithParentVariableName(), type(listToMerge)))
+                    
+                    for listMergeObj in listToMerge:
+
+                        if (type(listMergeObj) in [list, dict]):                            
+                            origData.append(self._resolveControlStructures(listMergeObj, type(listMergeObj)(), *args, **kwargs))
+                        else:
+                            origData.append(listMergeObj)
+
+                    if (listVal in origData):
+                        origData.remove(listVal)
+
+                    skipPostMerge = True
+
                 elif (listVal not in origData):
 
                     origData.append(listVal)
