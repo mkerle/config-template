@@ -103,6 +103,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         are found and processed.
         '''
 
+        #print('*** mergeData = %s\n' % (mergeData))
+
         if (type(mergeData) == dict):
 
             for k in mergeData:
@@ -143,10 +145,22 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                 if (type(listval) in [list, dict]):
 
-                    origListObject = origData[origData.index(listval)]
                     mergeListObject = mergeData[mergeData.index(listval)]
 
-                    origData[origData.index(listval)] = self._resolveImports(mergeListObject, copy.deepcopy(origListObject))
+                    try:
+                        origListObject = origData[origData.index(listval)]
+                        origData[origData.index(listval)] = self._resolveImports(mergeListObject, copy.deepcopy(origListObject))
+                        
+                    except Exception as e:
+                        '''
+                        This condition can be triggered when in a 
+                        "$_merge_list_with_parent" operation with multiple
+                        import blocks
+                        see test case testMergeWithParentComplex2
+                        '''
+                        origListObject = mergeListObject                        
+                        origData.append(self._resolveImports(mergeListObject, copy.deepcopy(mergeListObject)))
+                    
 
                 elif (listval not in origData):
 

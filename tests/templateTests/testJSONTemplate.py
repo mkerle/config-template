@@ -283,3 +283,69 @@ class testJSONTemplate(TestCase):
 
         self.assertDictEqual(expectedResult, renderedTemplate)
 
+    def testMergeWithParentComplex2(self):
+
+        importTemplateData1 = {
+            "name" : "Child List Data",
+            "version" : 1,
+            "imports" : [],
+            "template" : {
+                "$_merge_list_with_parent" : [
+                    {
+                        "name" : "red",
+                        "value" : "{{data.red}}"
+                    },
+                    {
+                        "name" : "green",
+                        "value" : "{{data.green}}"
+                    },
+                    {
+                        "name" : "blue",
+                        "value" : "{{data.blue}}"
+                    }
+                ]
+            }
+        }
+
+        importTemplateData2 = {
+            "name" : "Other Colours",
+            "version" : 1,
+            "imports" : [],
+            "template" : {                
+                "$_merge_list_with_parent" : [
+                    {
+                        "name" : "purple"
+                    },
+                    {
+                        "name" : "black"
+                    },
+                    {
+                        "name" : "white"
+                    }
+                ]                
+            }
+        }
+
+        templateData = {
+            "name" : "Merge With Parent Basic Test",
+            "version" : 1,
+            "imports" : [ { "name" : "Child List Data" } ],
+            "template" : {
+                "colours" : [ [ 1, 2, 3], {}, { "$_import_blocks" : [ "Child List Data", "Other Colours" ] }, "a", "b", "c" ]
+            }
+        }
+
+        importedTemplateSource1 = JSONConfigTemplateSource(importTemplateData1)
+        importedTemplateSource2 = JSONConfigTemplateSource(importTemplateData2)
+        templateSource = JSONConfigTemplateSource(templateData)
+
+        template = JSONConfigTemplate(templateSource, { "Child List Data" : importedTemplateSource1, "Other Colours" : importedTemplateSource2 }, JSONTemplateDefinition())
+
+        renderedTemplate = template.render(data={'red' : 100, 'green' : 200, 'blue' : 300})
+
+        #print(renderedTemplate)
+
+        expectedResult = {'colours': [[1, 2, 3], {}, 'a', 'b', 'c', {'name': 'red', 'value': 100}, {'name': 'green', 'value': 200}, {'name': 'blue', 'value': 300}, {'name': 'purple'}, {'name': 'black'}, {'name': 'white'}]}
+
+        self.assertDictEqual(expectedResult, renderedTemplate)
+

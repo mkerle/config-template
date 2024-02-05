@@ -41,4 +41,4 @@ class testMultipleInheritenceEnvironment(TestCase):
 
         expectedResult = {'name': 'Test', 'common-template-1': {'type': 'common1'}, 'common-template-2': {'types': ['common2']}}
         self.assertDictEqual(expectedResult, renderedTemplate)
-        print(renderedTemplate)
+        #print(renderedTemplate)
