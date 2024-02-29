@@ -194,6 +194,68 @@ class testJSONTemplate(TestCase):
 
         self.assertDictEqual(expectedResult, renderedTemplate)
 
+    def testImportInForLoop(self):
+
+        mainTemplateData = {
+            "name" : "My Template",
+            "version" : 1,
+            "imports" : [ 
+                { "name" : "Attrs 1" }
+            ],
+            "template" : {
+                "address-objects" : [
+                    {
+                        "name" : "static_address_1",
+                        "type" : "subnet",
+                        "subnet" : "192.168.1.1"
+                    },
+                    [
+                        "{% for obj in {{data}} %}",                        
+                        "{% $_import_blocks [ 'Attrs 1' ] %}",                        
+                        "{% endfor %}"
+                    ]
+                ]		
+            }
+        }
+
+        attrTemplateData = {
+            "name" : "Attrs 1",
+            "version" : 1,
+            "imports" : [],
+            "template" : {
+                "name" : "{{obj.getName}}",
+                "type" : "subnet",
+                "subnet" : "{{obj.getSubnet}}"
+            }
+        }
+
+        class AddressData():
+
+            def __init__(self, name, subnet):
+                self.name = name
+                self.subnet = subnet
+
+            def getName(self, *args, **kwargs) -> str:
+                return self.name
+            
+            def getSubnet(self, *args, **kwargs) -> str:
+                return self.subnet
+            
+        sourceData = [AddressData("address_1", "10.1.1.1/32"), AddressData("address_2", "10.2.2.2/32")]
+
+        mainTemplate = JSONConfigTemplateSource(mainTemplateData)
+        attrTemplate = JSONConfigTemplateSource(attrTemplateData)
+
+        template = JSONConfigTemplate(mainTemplate, { "Attrs 1" : attrTemplate }, JSONTemplateDefinition())
+
+        renderedTemplate = template.render(data=sourceData)
+
+        #print(renderedTemplate)
+
+        expectedResult = {'address-objects': [{'name': 'static_address_1', 'type': 'subnet', 'subnet': '192.168.1.1'}, {'name': 'address_1', 'type': 'subnet', 'subnet': '10.1.1.1/32'}, {'name': 'address_2', 'type': 'subnet', 'subnet': '10.2.2.2/32'}]}
+
+        self.assertDictEqual(expectedResult, renderedTemplate)
+
     def testMergeWithParent(self):
 
         importTemplateData = {

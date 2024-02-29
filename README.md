@@ -242,3 +242,9 @@ This will produce a rendered template of:
     }
 }
 ```
+
+With JSON templates we can import in two ways:
+
+1. We can import inside of a dictionary object using `$_import_blocks` as the key and the value a list of template names to import.
+1. We can import inside of a list where a `str` value uses the control structure syntax.  The syntax would look like: `{% $_import_blocks ['Import Template 1', 'Import Template 2'] %}`
+

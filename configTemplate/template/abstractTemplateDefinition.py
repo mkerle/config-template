@@ -7,12 +7,14 @@ class AbstractTemplateDefinition(ABC):
 
     CONTROL_STRUCTURE_TYPE_IF = 'if'
     CONTROL_STRUCTURE_TYPE_FOR = 'for'
+    CONTROL_STRUCTURE_TYPE_IMPORT = 'import'
 
     CONTROL_STRUCTURE_REGEX_IF = r'{%\s+if\s+(.*?)\s+then\s+(.*?)(?=else)(else)?(.*)%}|{%\s+if\s+(.*?)\s+then\s+(.*?)%}'
     CONTROL_STRUCTURE_REGEX_FOR = r'{%\s+for\s+(.*?)\s+in\s+(.*?)\s+do\s+(.*)%}'
+    CONTROL_STRUCTURE_REGEX_IMPORT = r'{%\s+{IMPORT_BLOCKS}\s+(\[.*\])\s+%}'
 
     CONTROL_STRUCTURE_DATASRC_FOR = 'dataSrc'
-    CONTROL_STRUCTURE_RETVAL_FOR = 'retVals'
+    CONTROL_STRUCTURE_RETVAL_FOR = 'retVals'    
 
     def __init__(self):
 
@@ -100,6 +102,10 @@ class AbstractTemplateDefinition(ABC):
         
         return False
     
+    def _getControlStructureImportRegex(self) -> str:
+
+        return self.CONTROL_STRUCTURE_REGEX_IMPORT.replace('{IMPORT_BLOCKS}', self._importBlocks.replace('$', '\$'))
+    
     def getTypeOfControlStructure(self, s : str) -> Union[str, None]:
 
         if (type(s) == str):
@@ -108,7 +114,10 @@ class AbstractTemplateDefinition(ABC):
                 return self.CONTROL_STRUCTURE_TYPE_IF
             
             if (re.match(self.CONTROL_STRUCTURE_REGEX_FOR, s)):
-                return self.CONTROL_STRUCTURE_TYPE_FOR
+                return self.CONTROL_STRUCTURE_TYPE_FOR            
+            
+            if (re.match(self._getControlStructureImportRegex(), s)):                
+                return self.CONTROL_STRUCTURE_TYPE_IMPORT
         
         return None
     
@@ -180,6 +189,15 @@ class AbstractTemplateDefinition(ABC):
                 raise('An error occured generating the for loop control structure code')
 
         return None, None
+    
+    def getImportControlStructureImportList(self, s : str) -> list:
+
+        match = re.match(self._getControlStructureImportRegex(), s)
+
+        if (match is not None):
+            return eval(match.group(1))
+        
+        return []
 
     
 

@@ -12,7 +12,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
     def __init__(self, 
                  mainTemplateSource : JSONConfigTemplateSource = None,
                  importedTemplatesSources : dict = None,
-                 templateDefinition : AbstractTemplateDefinition = JSONTemplateDefinition()):
+                 templateDefinition : JSONTemplateDefinition = JSONTemplateDefinition()):
         
         super().__init__(mainTemplateSource, importedTemplatesSources, templateDefinition)
 
@@ -160,7 +160,14 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                         '''
                         origListObject = mergeListObject                        
                         origData.append(self._resolveImports(mergeListObject, copy.deepcopy(mergeListObject)))
+
+                elif (type(listval) == str and self.getTemplateDefinition().getTypeOfControlStructure(listval) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_IMPORT):
+                     
+                    importList = self.getTemplateDefinition().getImportControlStructureImportList(listval)
                     
+                    struct = self._resolveImports({'$_import_blocks' : importList}, {'$_import_blocks' : importList})
+                    origData[origData.index(listval)] = struct
+                    #origData.append(struct)
 
                 elif (listval not in origData):
 
