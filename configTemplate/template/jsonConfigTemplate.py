@@ -19,6 +19,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         self.mainTemplateSource = mainTemplateSource
         self.importedTemplatesSources = importedTemplatesSources
         self.resolvedTemplates = {}
+        self.variableAssignments = {}
 
     def _getxpathStr(self, index : Union[str, int]) -> str:
 
@@ -174,7 +175,57 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     origData.append(listval)
 
         return origData
+    
+    def _parseForLoopKeywordArguments(self, keywordArgs : list[dict]) -> list:
+        '''
+        The keywordArgs `list` (kwargs) specified in the for loop control structure
+        need some parsing on the xpath to ensure that it is formatted correctly.
+        This parsing and formating is required to simplify the syntax used in 
+        the template to avoid escaping of quotes etc.
 
+        Assumptions are made that all digit indexes will be treated as `int`
+        with all other indexes treated as `str`.
+
+        Returns the parsed keywordArgs list.
+        '''
+
+        for kwArg in keywordArgs:
+
+            if (type(kwArg) is not dict):
+                raise Exception('_parseForLoopKeywordArguments() -> Found a keyword argument that is not of type dict: %s' % (kwArg))
+            
+            if ('template' not in kwArg):
+                raise Exception('_parseForLoopKeywordArguments() -> Keyword argument does not specify the "template": %s' % (kwArg))
+            
+            if ('variableXpath' not in kwArg):
+                raise Exception('_parseForLoopKeywordArguments() -> Keyword argument does not specify the "variableXpath": %s' % (kwArg))
+            
+            # format the variableXpath to be compatible with this library
+            xPathList = []
+            for part in kwArg['variableXpath'].split('['):
+                if (part == '$'):
+                    xPathList.append(part)
+                else:
+                    
+                    # remove the "]"
+                    part = part.strip()[:-1]
+
+                    if (part.isdigit()):
+                        xPathList.append(int(part))
+                    else:
+                        xPathList.append(part)
+
+            if (len(xPathList) > 2):
+                xPathList.insert(-1, self.getTemplateDefinition().getSetAssignmentVariableName())
+            elif (len(xPathList) == 2):
+                xPathList.insert(1, self.getTemplateDefinition().getSetAssignmentVariableName())
+            else:
+                # this is potentially an invalid path
+                xPathList.insert(0, self.getTemplateDefinition().getSetAssignmentVariableName())
+
+            kwArg['xPathList'] = xPathList
+
+        return keywordArgs
     
     def _resolveControlStructures(self, mergeData : Union[dict, list], origData : Union[dict, list], *args, **kwargs) -> Union[dict, list]:
         '''
@@ -231,14 +282,56 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                 elif (type(listVal) == list and self.getTemplateDefinition().getTypeOfControlStructure(listVal) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_FOR):
 
-                    code, dataSrcVariable = self.getTemplateDefinition().getForListControlStructureCode(listVal)
+                    code, dataSrcVariable, keywordArgs = self.getTemplateDefinition().getForListControlStructureCode(listVal)
 
                     if (code is None or dataSrcVariable is None):
                         raise Exception('Failed to generate for loop code from list: %s' % (listVal))
 
                     if (self.getTemplateDefinition().hasTemplateVariable(dataSrcVariable)):
+
+                        dataSrcKwargs = {}
+                        if (keywordArgs is not None):
+                            keywordArgs = self._parseForLoopKeywordArguments(keywordArgs)
+
+                            for kwArg in keywordArgs:
+                                templateName = kwArg['template']
+                                variableXpath = kwArg['variableXpath']
+
+                                # check cache
+                                cacheKey = templateName + '->' + variableXpath
+                                if (cacheKey not in self.variableAssignments):
+
+                                    if (templateName not in self.resolvedTemplates):
+                                        self.resolveTemplateSource(self.importedTemplatesSources[templateName])
+
+                                    templateData = self.resolvedTemplates[templateName]
+                                    self.resolvedTemplates[templateName] = self._resolveControlStructures(templateData, copy.deepcopy(templateData), *args, **kwargs)
+
+                                    flatternedTemplate = self.flatternResolvedTemplate(self.resolvedTemplates[templateName])
+
+                                    variableResolvedTemplate = self.resolveTemplateVariables(flatternedTemplate, *args, **kwargs)
+
+                                    unflatternedTemplate = self.unflatternTemplate(variableResolvedTemplate, self.resolvedTemplates[templateName], excludeSetAssignmentKeyword=False)
+
+                                    templatePointer = None
+                                    for xPathPart in kwArg['xPathList']:
+
+                                        if (xPathPart == '$'):
+                                            # init the pointer to root of template
+                                            templatePointer = unflatternedTemplate
+
+                                        elif (xPathPart not in templatePointer):
+                                            raise Exception('_resolveControlStructures() -> Invalid xpath specified in foor loop kwargs: %s (index=%s, real xpath list: %s) in -> %s' % (variableXpath, xPathPart, kwArg['xPathList'], templatePointer))
+
+                                        else:
+                                            templatePointer = templatePointer[xPathPart]
+
+                                    self.variableAssignments[cacheKey] = { 'name' : xPathPart, 'value' : templatePointer['value'] }
+
+                                dataSrcKwargs[self.variableAssignments[cacheKey]['name']] = self.variableAssignments[cacheKey]['value']
+
                         localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
-                        dataSrc = self._evaluateVariable(dataSrcVariable[2:-2], '$', localFlatternedTemplate, *args, **kwargs)
+                        dataSrc = self._evaluateVariable(dataSrcVariable[2:-2], '$', localFlatternedTemplate, *args, **kwargs, **dataSrcKwargs)
                     else:
                         dataSrc = eval(dataSrcVariable)
 
@@ -424,16 +517,23 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         else:
             return int(s.replace('[', '').replace(']', ''))
         
-    def _excludePathFromTemplate(self, s : str) -> bool:
+    def _excludePathFromTemplate(self, s : str, **kwargs) -> bool:
         
         if (type(s) == str):
-            if (self.getTemplateDefinition().isTemplateKeyword(s)):
+
+            excludeSetAssignmentKeyword = True
+            if (kwargs is not None):
+                excludeSetAssignmentKeyword = kwargs.get('excludeSetAssignmentKeyword', True)
+
+            if (self.getTemplateDefinition().getSetAssignmentVariableName() == s and not excludeSetAssignmentKeyword):
+                return False
+            elif (self.getTemplateDefinition().isTemplateKeyword(s)):
                 return True
             
         return False
             
     
-    def unflatternTemplate(self, flatternedTemplate : dict, resolvedTemplate : dict) -> dict:
+    def unflatternTemplate(self, flatternedTemplate : dict, resolvedTemplate : dict, **kwargs) -> dict:
 
         unflatternedTemplate = {}
         for xpath in flatternedTemplate:
@@ -444,7 +544,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
             includeInOutput = True
             while (index < len(pathParts)-1):                
                 strippedPath = self._stripXPathName(pathParts[index])
-                if (self._excludePathFromTemplate(strippedPath)):                    
+                if (self._excludePathFromTemplate(strippedPath, **kwargs)):                    
                     # xpath includes a template only section
                     includeInOutput = False
                     # set the next index so that the loop completes

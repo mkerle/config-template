@@ -108,5 +108,5 @@ def getDictFromFlatternedDict(flatternedDict : dict, xpathMatch : str) -> dict:
     for k in flatternedDict.keys():
         if (xpathMatch in k):
             matchedDict[getChildKeyFromXpath(k)] = flatternedDict[k]
-
+            
     return matchedDict

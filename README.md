@@ -178,6 +178,61 @@ An example of this for loop is shown below:
 ]
 ```
 
+Additionally, the for loop defined above can also specify `kwargs` (keyword arguments) that can be passed to the data source (when it is a function call).  The syntax is shown below:
+
+```json
+{
+	"name" : "My Template",
+	"version" : 1,
+	"imports" : [
+		{ "name" : "Variable Definition" }
+	],
+	"template" : {
+		"addresses" : [
+			[
+				"{% for obj in {{sourceData.getData}} kwargs=[ { 'template' : 'Variable Definition', 'variableXpath' : '$[var1]' }, { 'template' : 'Variable Definition', 'variableXpath' : '$[Nested Variables][foo]' } ] %}",
+                {
+                    "name" : "{{obj.getName}}",
+                    "type" : "subnet",
+                    "subnet" : "{{obj.getSubnet}}",
+                    "custom-vars" : "{{obj.customVars}}"
+                },
+				"{% endfor %}"
+			]
+		]
+	}
+}
+```
+
+The above example uses "kwargs" that are specified in an imported template called "Variable Definition".  The "xpath" specified for each kwarg should begin with `$` for the root object of the template with each str index specified without any quotes.  The variable xpath should NOT contain the `$_set` keyword.  The "Variable Definition" template could look like the below:
+
+```json
+{
+    "name" : "Variable Definition",
+    "version" : 1,
+    "imports" : [ ],
+    "template" : {
+        "$_set" : {			
+            "var1" : { "value" : "somestring" },		
+            "var2" : { "value" : 1 },
+            "var3" : { "value" : [ 1000, 2000, 3000] },
+            "var4" : { "value" : { "myKey" : "{{data.getEnvironmentVar}}" } }
+        },
+        "Nested Variables" : {
+            "$_set" : {
+                "foo" : { "value" : "bar" }
+            }
+        }
+    }
+}
+```
+
+It should be noted that a kwarg should be an immediate child under the `$_set` dict however the `$_set` keyword can exist anywhere throughout a template.  In a function receiving the kwargs the name of the index is the name used for each kwarg.  Each kwarg specifies a single property called `value`.
+
+
+
+
+
 # Other Built-in Functions
 
 Details of other built-in functions are described in the table below.

@@ -256,6 +256,111 @@ class testJSONTemplate(TestCase):
 
         self.assertDictEqual(expectedResult, renderedTemplate)
 
+    def testForLoopControlStructureKwargs(self):
+
+        mainTemplateData = {
+            "name" : "My Template",
+            "version" : 1,
+            "imports" : [
+                { "name" : "Variable Definition" }
+            ],
+            "template" : {
+                "$_set" : {
+                    "testIsNotRendered" : "This should not exist in the rendered output"
+                },
+                "addresses" : [
+                    [
+                        "{% for obj in {{data.getData}} kwargs=[ { 'template' : 'Variable Definition', 'variableXpath' : '$[var1]' }, { 'template' : 'Variable Definition', 'variableXpath' : '$[var2]' }, { 'template' : 'Variable Definition', 'variableXpath' : '$[var3]' }, { 'template' : 'Variable Definition', 'variableXpath' : '$[var4]' }, { 'template' : 'Variable Definition', 'variableXpath' : '$[Nested Variables][foo]' } ] %}",
+                        {
+                            "name" : "{{obj.getName}}",
+                            "type" : "subnet",
+                            "subnet" : "{{obj.getSubnet}}",
+                            "custom-vars" : "{{obj.customVars}}"
+                        },
+                        "{% endfor %}"
+                    ]
+                ]
+            }
+        }
+
+        kwargsData = {
+            "name" : "Variable Definition",
+            "version" : 1,
+            "imports" : [ ],
+            "template" : {
+                "$_set" : {			
+                    "var1" : { "value" : "somestring" },		
+                    "var2" : { "value" : 1 },
+                    "var3" : { "value" : [ 1000, 2000, 3000] },
+                    "var4" : { "value" : { "myKey" : "{{data.getEnvironmentVar}}" } }
+                },
+                "Nested Variables" : {
+                    "$_set" : {
+                        "foo" : { "value" : "bar" }
+                    }
+                }
+            }
+        }
+
+        class AddressData():
+
+            def __init__(self, name, subnet):
+                self.name = name
+                self.subnet = subnet
+                self.customVars = None
+
+            def getName(self, *args, **kwargs) -> str:
+                return self.name
+            
+            def getSubnet(self, *args, **kwargs) -> str:
+                return self.subnet
+            
+        class SourceData():
+
+            def __init__(self, addressData : list[AddressData]):
+
+                self.addressData = addressData
+
+            def getEnvironmentVar(self, *args, **kwargs) -> str:
+
+                return 'default'
+
+            def getData(self, xpath : str, flatternedTemplate : dict, *args, **kwargs):
+
+                var1 = kwargs['var1']
+                var2 = kwargs['var2']
+                var3 = kwargs['var3']
+                var4 = kwargs['var4']
+
+                foo = kwargs['foo']
+
+                for addr in self.addressData:
+                    addr.customVars = {
+                        'var1' : var1,
+                        'var2' : var2,
+                        'var3' : var3,
+                        'var4' : var4,
+                        'foo' : foo
+                    }
+                
+                return self.addressData
+            
+        addresses = [AddressData("address_1", "10.1.1.1/32"), AddressData("address_2", "10.2.2.2/32")]
+        sourceData = SourceData(addresses)
+
+        mainTemplate = JSONConfigTemplateSource(mainTemplateData)        
+        kwargsTemplate = JSONConfigTemplateSource(kwargsData)
+
+        template = JSONConfigTemplate(mainTemplate, { "Variable Definition" : kwargsTemplate }, JSONTemplateDefinition())
+
+        renderedTemplate = template.render(data=sourceData)
+
+        #print(renderedTemplate)
+
+        expectedResult = {'addresses': [{'name': 'address_1', 'type': 'subnet', 'subnet': '10.1.1.1/32', 'custom-vars': {'var1': 'somestring', 'var2': 1, 'var3': [1000, 2000, 3000], 'var4': {'myKey': 'default'}, 'foo': 'bar'}}, {'name': 'address_2', 'type': 'subnet', 'subnet': '10.2.2.2/32', 'custom-vars': {'var1': 'somestring', 'var2': 1, 'var3': [1000, 2000, 3000], 'var4': {'myKey': 'default'}, 'foo': 'bar'}}]}
+
+        self.assertDictEqual(expectedResult, renderedTemplate)    
+
     def testMergeWithParent(self):
 
         importTemplateData = {

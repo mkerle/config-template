@@ -5,7 +5,7 @@ from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDef
 
 class JSONTemplateDefinition(DefaultTemplateDefinition):
 
-    CONTROL_STRUCTURE_REGEX_FOR_LIST = r'{%\s+for\s+(.*?)\s+in\s+(.*?)\s+%}'
+    CONTROL_STRUCTURE_REGEX_FOR_LIST = r'{%\s+for\s+(.*?)\s+in\s+(.*?)\s+(kwargs(?:\s+)?=(?:\s+)?\[.*\]\s+)?%}'
     CONTROL_STRUCTURE_REGEX_ENDOR_LIST = r'{%\s+endfor\s+%}'
 
     def __init__(self):
@@ -35,11 +35,28 @@ class JSONTemplateDefinition(DefaultTemplateDefinition):
                 loopVariable = match.group(1).strip()
                 dataSrcVariable = match.group(2).strip()
 
+                try:
+                    keywordArgStr = match.group(3)
+                except IndexError as e:
+                    keywordArgStr = None
+
+                if (keywordArgStr is not None):
+                    keywordArgDictStr = ''.join(keywordArgStr.split('=')[1:])
+
+                    try:
+                        keywordArgs = eval(keywordArgDictStr)
+
+                    except Exception as e:
+                        raise Exception('getForListControlStructureCode() -> Error evaluating for loop kwargs! str=%s' % (keywordArgDictStr))
+                else:
+                    keywordArgs = []
+
+
                 innerObjects = var[1:-1]
 
                 code = '\n'.join(['for %s in %s:' % (loopVariable, self.CONTROL_STRUCTURE_DATASRC_FOR), '\t%s = %s + loopCallback(loopData=%s, %s=%s)' % (self.CONTROL_STRUCTURE_RETVAL_FOR, self.CONTROL_STRUCTURE_RETVAL_FOR, innerObjects, loopVariable, loopVariable) ])
 
-                return code, dataSrcVariable
+                return code, dataSrcVariable, keywordArgs
 
             except Exception as e:
                 raise('An error occured generating the for loop control structure code from a list')
