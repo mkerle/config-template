@@ -36,27 +36,29 @@ class JSONTemplateDefinition(DefaultTemplateDefinition):
                 dataSrcVariable = match.group(2).strip()
 
                 try:
-                    keywordArgStr = match.group(3)
+                    dataSrcKeywordArgStr = match.group(3)
                 except IndexError as e:
-                    keywordArgStr = None
+                    dataSrcKeywordArgStr = None
 
-                if (keywordArgStr is not None):
-                    keywordArgDictStr = ''.join(keywordArgStr.split('=')[1:])
+                if (dataSrcKeywordArgStr is not None):
+                    dataSrcKeywordArgDictStr = ''.join(dataSrcKeywordArgStr.split('=')[1:])
 
                     try:
-                        keywordArgs = eval(keywordArgDictStr)
+                        dataSrcKeywordArgs = eval(dataSrcKeywordArgDictStr)
 
                     except Exception as e:
-                        raise Exception('getForListControlStructureCode() -> Error evaluating for loop kwargs! str=%s' % (keywordArgDictStr))
+                        raise Exception('getForListControlStructureCode() -> Error evaluating for loop kwargs! str=%s' % (dataSrcKeywordArgDictStr))
                 else:
-                    keywordArgs = []
+                    dataSrcKeywordArgs = []
 
 
                 innerObjects = var[1:-1]
 
-                code = '\n'.join(['for %s in %s:' % (loopVariable, self.CONTROL_STRUCTURE_DATASRC_FOR), '\t%s = %s + loopCallback(loopData=%s, %s=%s)' % (self.CONTROL_STRUCTURE_RETVAL_FOR, self.CONTROL_STRUCTURE_RETVAL_FOR, innerObjects, loopVariable, loopVariable) ])
+                code = '\n'.join(['for %s in %s:' % (loopVariable, self.CONTROL_STRUCTURE_DATASRC_FOR), '\t%s = %s + loopCallback(loopData=%s, %s=%s, **kwargs)' % (self.CONTROL_STRUCTURE_RETVAL_FOR, self.CONTROL_STRUCTURE_RETVAL_FOR, innerObjects, loopVariable, loopVariable) ])
 
-                return code, dataSrcVariable, keywordArgs
+                callbackKwargs = [ 'loopData', loopVariable ]
+
+                return code, dataSrcVariable, dataSrcKeywordArgs, callbackKwargs
 
             except Exception as e:
                 raise('An error occured generating the for loop control structure code from a list')

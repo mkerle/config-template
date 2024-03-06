@@ -102,9 +102,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         mergeData in most cases will be the same as origData when the method 
         is initially called and origData wil be modified as import statements
         are found and processed.
-        '''
-
-        #print('*** mergeData = %s\n' % (mergeData))
+        '''        
 
         if (type(mergeData) == dict):
 
@@ -163,11 +161,11 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                         origData.append(self._resolveImports(mergeListObject, copy.deepcopy(mergeListObject)))
 
                 elif (type(listval) == str and self.getTemplateDefinition().getTypeOfControlStructure(listval) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_IMPORT):
-                     
+                    
                     importList = self.getTemplateDefinition().getImportControlStructureImportList(listval)
                     
                     struct = self._resolveImports({'$_import_blocks' : importList}, {'$_import_blocks' : importList})
-                    origData[origData.index(listval)] = struct
+                    origData[origData.index(listval)] = struct                    
                     #origData.append(struct)
 
                 elif (listval not in origData):
@@ -246,8 +244,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                 origData[k] = self._resolveControlStructures(mergeData[k], origData[k], *args, **kwargs)
 
         elif (type(mergeData) == list):
-
-            for listVal in mergeData:
+            
+            for listVal in mergeData:                
 
                 skipPostMerge = False
 
@@ -282,7 +280,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                 elif (type(listVal) == list and self.getTemplateDefinition().getTypeOfControlStructure(listVal) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_FOR):
 
-                    code, dataSrcVariable, keywordArgs = self.getTemplateDefinition().getForListControlStructureCode(listVal)
+                    code, dataSrcVariable, dataSrcKeywordArgs, callbackKwargs = self.getTemplateDefinition().getForListControlStructureCode(listVal)                    
 
                     if (code is None or dataSrcVariable is None):
                         raise Exception('Failed to generate for loop code from list: %s' % (listVal))
@@ -290,10 +288,10 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     if (self.getTemplateDefinition().hasTemplateVariable(dataSrcVariable)):
 
                         dataSrcKwargs = {}
-                        if (keywordArgs is not None):
-                            keywordArgs = self._parseForLoopKeywordArguments(keywordArgs)
+                        if (dataSrcKeywordArgs is not None):
+                            dataSrcKeywordArgs = self._parseForLoopKeywordArguments(dataSrcKeywordArgs)
 
-                            for kwArg in keywordArgs:
+                            for kwArg in dataSrcKeywordArgs:
                                 templateName = kwArg['template']
                                 variableXpath = kwArg['variableXpath']
 
@@ -335,11 +333,18 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     else:
                         dataSrc = eval(dataSrcVariable)
 
+
+                    loopKwargs = {}
+                    for kwarg in kwargs:
+                        if (kwarg not in callbackKwargs):
+                            loopKwargs[kwarg] = kwargs[kwarg]
+
                     retVals = []
                     globals = {
                         self.getTemplateDefinition().CONTROL_STRUCTURE_DATASRC_FOR : dataSrc, 
                         self.getTemplateDefinition().CONTROL_STRUCTURE_RETVAL_FOR : retVals,
-                        'loopCallback' : self._loopCallbackMerge
+                        'loopCallback' : self._loopCallbackMerge,
+                        'kwargs' : loopKwargs
                     }
                     
                     exec(code, globals)
@@ -367,7 +372,13 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     
                     for listMergeObj in listToMerge:
 
-                        if (type(listMergeObj) in [list, dict]):                            
+                        if (type(listMergeObj) == list and self.getTemplateDefinition().getTypeOfControlStructure(listMergeObj) == self.getTemplateDefinition().CONTROL_STRUCTURE_TYPE_FOR):
+                            # special case for embedded for loop list
+                            # note the addition of [] around listMergeObj for origData but not in mergeData
+                            listMergeObj = self._resolveControlStructures([listMergeObj], type(listMergeObj)(), *args, **kwargs)                            
+                            origData += listMergeObj
+
+                        elif (type(listMergeObj) in [list, dict]):                             
                             origData.append(self._resolveControlStructures(listMergeObj, type(listMergeObj)(), *args, **kwargs))
                         else:
                             origData.append(listMergeObj)
@@ -386,7 +397,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     origDataListValObj = origData[origData.index(listVal)]
 
                     origDataListValObj = self._resolveControlStructures(mergeDataListValObj, origDataListValObj, *args, **kwargs)
-
+        
         return origData
 
     

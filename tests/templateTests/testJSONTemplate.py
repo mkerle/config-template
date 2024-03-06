@@ -516,3 +516,47 @@ class testJSONTemplate(TestCase):
 
         self.assertDictEqual(expectedResult, renderedTemplate)
 
+
+    def testMergeWithParentComplex3(self):
+        '''
+        This test combines $_merge_list_with_parent, inline $_import_blocks
+        and for loops in list
+        '''
+
+        mainTemplateData = {
+            "name" : "Main Template",
+            "version" : 1,
+            "imports" : [
+                { "name" : "My Objects" }
+            ],
+            "template" : {
+                "objects" : [ "{% $_import_blocks ['My Objects'] %}" ]
+            }
+        }
+
+        myObjectsData = {
+            "name" : "My Objects",
+            "version" : 1,
+            "imports" : [ ],
+            "template" : {
+                "$_merge_list_with_parent" : [                    
+                    [
+                        "{% for obj in {{data}} %}",
+                        "{{obj}}",
+                        "{% endfor %}"
+                    ]                    
+                ]
+            }
+        }
+
+        mainTemplate = JSONConfigTemplateSource(mainTemplateData)
+        myObjectTemplate = JSONConfigTemplateSource(myObjectsData)
+        
+        template = JSONConfigTemplate(mainTemplate, { "My Objects" : myObjectTemplate })
+
+        renderedTemplate = template.render(data=['object 1', 'object 2', 'object 3'])
+
+        #print(renderedTemplate)
+
+        expectedResult = {'objects': ['object 1', 'object 2', 'object 3']}
+        self.assertDictEqual(renderedTemplate, expectedResult)
