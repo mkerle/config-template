@@ -25,6 +25,7 @@ class AbstractTemplateDefinition(ABC):
         self._mergeListWithParent = '$_merge_list_with_parent'
         self._variableStart = '{{'
         self._variableEnd = '}}'
+        self._variableModifier = '|'
         self._controlStructureStart = '{%'
         self._controlStructureEnd = '%}'
 
@@ -69,6 +70,12 @@ class AbstractTemplateDefinition(ABC):
 
     def getVariableEnd(self) -> str:
         return self._variableEnd
+
+    def setVariableModifier(self, variableModifier : str):
+        self._variableModifier = variableModifier
+
+    def getVariableModifier(self) -> str:
+        return self._variableModifier
     
     def setControlStructureStart(self, controlStructureStart : str):
         self._controlStructureStart = controlStructureStart
@@ -104,6 +111,33 @@ class AbstractTemplateDefinition(ABC):
             return s.strip().startswith(self.getVariableStart()) and s.strip().endswith(self.getVariableEnd())
         
         return False
+
+    def hasTemplateVariableModifier(self, s : str) -> bool:
+
+        if (self.hasTemplateVariable(s)):
+            return '|' in s
+
+        return False
+
+    def getTemplateVariableParts(self, s : str) -> Tuple[str, list[str]]:
+        '''
+        Takes a str representing a template variable and returns the name of
+        the variable and a `list` of any modifiers. e.g. {{data.getName|lower}}
+        will return a `Tuple` of `('data.getName, ['lower'])`
+        '''
+
+        if (self.hasTemplateVariable(s)):
+
+            var = s.strip()[2:-2].strip()
+
+            if (self.hasTemplateVariableModifier(s)):
+
+                varParts = var.split('|')
+                return varParts[0], varParts[1:]
+
+            return var, []
+
+        return None, None
     
     def hasTemplateControlStructure(self, s : str) -> bool:
 

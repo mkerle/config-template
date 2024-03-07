@@ -292,7 +292,7 @@ class testJSONTemplate(TestCase):
                     "var1" : { "value" : "somestring" },		
                     "var2" : { "value" : 1 },
                     "var3" : { "value" : [ 1000, 2000, 3000] },
-                    "var4" : { "value" : { "myKey" : "{{data.getEnvironmentVar}}" } }
+                    "var4" : { "value" : { "myKey" : "{{data.getEnvironmentVar|upper}}" } }
                 },
                 "Nested Variables" : {
                     "$_set" : {
@@ -357,7 +357,7 @@ class testJSONTemplate(TestCase):
 
         #print(renderedTemplate)
 
-        expectedResult = {'addresses': [{'name': 'address_1', 'type': 'subnet', 'subnet': '10.1.1.1/32', 'custom-vars': {'var1': 'somestring', 'var2': 1, 'var3': [1000, 2000, 3000], 'var4': {'myKey': 'default'}, 'foo': 'bar'}}, {'name': 'address_2', 'type': 'subnet', 'subnet': '10.2.2.2/32', 'custom-vars': {'var1': 'somestring', 'var2': 1, 'var3': [1000, 2000, 3000], 'var4': {'myKey': 'default'}, 'foo': 'bar'}}]}
+        expectedResult = {'addresses': [{'name': 'address_1', 'type': 'subnet', 'subnet': '10.1.1.1/32', 'custom-vars': {'var1': 'somestring', 'var2': 1, 'var3': [1000, 2000, 3000], 'var4': {'myKey': 'DEFAULT'}, 'foo': 'bar'}}, {'name': 'address_2', 'type': 'subnet', 'subnet': '10.2.2.2/32', 'custom-vars': {'var1': 'somestring', 'var2': 1, 'var3': [1000, 2000, 3000], 'var4': {'myKey': 'DEFAULT'}, 'foo': 'bar'}}]}
 
         self.assertDictEqual(expectedResult, renderedTemplate)    
 

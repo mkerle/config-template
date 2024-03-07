@@ -258,7 +258,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     
                     if (self.getTemplateDefinition().hasTemplateVariable(dataSrcVariable)):
                         localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
-                        dataSrc = self._evaluateVariable(dataSrcVariable[2:-2], '$', localFlatternedTemplate, *args, **kwargs)
+                        dataSrcVariable, modifiers = self.getTemplateDefinition().getTemplateVariableParts(dataSrcVariable)
+                        dataSrc = self._evaluateVariable(dataSrcVariable, modifiers, '$', localFlatternedTemplate, *args, **kwargs)
                     else:
                         dataSrc = eval(dataSrcVariable)
 
@@ -329,7 +330,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                                 dataSrcKwargs[self.variableAssignments[cacheKey]['name']] = self.variableAssignments[cacheKey]['value']
 
                         localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
-                        dataSrc = self._evaluateVariable(dataSrcVariable[2:-2], '$', localFlatternedTemplate, *args, **kwargs, **dataSrcKwargs)
+                        dataSrcVariable, modifiers = self.getTemplateDefinition().getTemplateVariableParts(dataSrcVariable)
+                        dataSrc = self._evaluateVariable(dataSrcVariable, modifiers, '$', localFlatternedTemplate, *args, **kwargs, **dataSrcKwargs)
                     else:
                         dataSrc = eval(dataSrcVariable)
 
@@ -461,13 +463,23 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         else:
             raise Exception('Variable "%s" is not supported - too many levels' % (templateVariableName))
         
-    def _evaluateVariable(self, templateVariableName : str, xpath : str, flatternedTemplate : dict, *args, **kwargs) -> any:
+    def _evaluateVariable(self, templateVariableName : str, modifiers : list[str], xpath : str, flatternedTemplate : dict, *args, **kwargs) -> any:
 
         obj = self._getVariableFromArgs(templateVariableName, *args, **kwargs)
 
+        parsedModifiers = ''
+        for modifier in modifiers:
+            if modifier in ['lower', 'upper']:
+                parsedModifiers += '.%s()' % (modifier)
+            else:
+                raise Exception('_evaluateVariable() -> Error! Invalid modifier given: %s.  variable name: %s' % (modifier, templateVariableName))
+
         if (callable(obj)):                            
-            return obj(xpath, flatternedTemplate, *args, **kwargs)
+            return eval('obj(xpath, flatternedTemplate, *args, **kwargs)%s' % (parsedModifiers))
         else:
+            if (type(obj) is str):
+                return obj + parsedModifiers
+            
             return obj
 
     def resolveTemplateVariables(self, flatternedTemplate : dict, *args, **kwargs) -> dict:
@@ -494,7 +506,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                         
                             condition = self.getTemplateDefinition().getIfControlStructureCondition(val)
 
-                            evaluatedCondition = self._evaluateVariable(condition, xpath, flatternedTemplate, *args, **kwargs)
+                            evaluatedCondition = self._evaluateVariable(condition, [], xpath, flatternedTemplate, *args, **kwargs)
 
                             if (type(evaluatedCondition) == bool):
                                 if (evaluatedCondition):
@@ -503,7 +515,8 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                                     retVal = self.getTemplateDefinition().getIfControlStructureReturnFalse(val)                            
 
                                 if (self.getTemplateDefinition().hasTemplateVariable(retVal)):
-                                    flatternedTemplate[xpath] = self._evaluateVariable(retVal[2:-2], xpath, flatternedTemplate, *args, **kwargs)
+                                    retValVariable, modifiers = self.getTemplateDefinition().getTemplateVariableParts(retVal)
+                                    flatternedTemplate[xpath] = self._evaluateVariable(retValVariable, modifiers, xpath, flatternedTemplate, *args, **kwargs)
                                 else:
                                     flatternedTemplate[xpath] = retVal
                             
@@ -511,9 +524,9 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                                 raise Exception('Evaluated logic condition did not return a boolean type: %s' % (condition))
 
                     elif (self.getTemplateDefinition().hasTemplateVariable(val)):
-
-                        parsedValue = val[2:-2]
-                        flatternedTemplate[xpath] = self._evaluateVariable(parsedValue, xpath, flatternedTemplate, *args, **kwargs)
+                        
+                        parsedValue, modifiers = self.getTemplateDefinition().getTemplateVariableParts(val)
+                        flatternedTemplate[xpath] = self._evaluateVariable(parsedValue, modifiers, xpath, flatternedTemplate, *args, **kwargs)
 
 
                         
