@@ -478,6 +478,11 @@ class JSONConfigTemplate(AbstractConfigTemplate):
             return eval('obj(xpath, flatternedTemplate, *args, **kwargs)%s' % (parsedModifiers))
         else:
             if (type(obj) is str):
+                # if there are any modifiers on a str then we need to eval
+                # before returning
+                if (len(parsedModifiers) > 0):
+                    return eval('"%s"' % (obj) + parsedModifiers)
+
                 return obj + parsedModifiers
             
             return obj
