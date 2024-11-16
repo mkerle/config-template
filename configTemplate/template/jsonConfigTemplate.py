@@ -428,11 +428,6 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
             self.resolvedTemplates[self.mainTemplateSource.getTemplateName()] = self._resolveControlStructures(mainTemplateData, copy.deepcopy(mainTemplateData), *args, **kwargs)
 
-        else:
-
-            logging.error('jsonConfigTemplate.resolveTemplateControlStructures() -> The main template was not found in the resolved templates: "%s"' % (mainTemplateName))
-
-
 
     def flatternResolvedTemplate(self, resolvedTemplate : dict) -> dict:
 
