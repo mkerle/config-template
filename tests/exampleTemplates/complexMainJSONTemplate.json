@@ -13,7 +13,7 @@
             "mode" : "proxy",
             "logging" : {
                 "remote-server2" : "192.168.255.253"
-            }
+            }            
         },
         "device-interfaces" : [
             {

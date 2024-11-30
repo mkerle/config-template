@@ -43,7 +43,7 @@ class testDefaultEnvironment(TestCase):
 
         renderedTemplate = template.render(settings=DeviceSettings('device2'))
 
-        expectedResult = {'device-settings': {'name': 'device2', 'mode': 'proxy', 'logging': {'remote-server2': '192.168.255.253', 'remote-server1': '192.168.254.253'}, 'mem-size': '1024'}, 'device-interfaces': [{'port': 'port1', 'vrf': 'DMZ', 'vlan': 100, 'name': 'DMZ-v100', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'DMZ', 'vlan': 101, 'name': 'DMZ-v101', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'CORP', 'vlan': 200, 'name': 'CORP-v200', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}]}
+        expectedResult = {'device-settings': {'name': 'device2', 'mode': 'proxy', 'logging': {'remote-server2': '192.168.255.253', 'remote-server1': '192.168.254.253'}, 'mem-size': '1024'}, 'device-interfaces': [{'port': 'port1', 'vrf': 'DMZ', 'vlan': 100, 'name': 'DMZ-v100', 'zone-lower': 'dmz', 'zone-lower-upper': 'DMZ', 'zone-start': 'DMZ-suffix', 'zone-end': 'zone-DMZ', 'zone-middle': 'zone-dmz-suffix', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'DMZ', 'vlan': 101, 'name': 'DMZ-v101', 'zone-lower': 'dmz', 'zone-lower-upper': 'DMZ', 'zone-start': 'DMZ-suffix', 'zone-end': 'zone-DMZ', 'zone-middle': 'zone-dmz-suffix', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}, {'port': 'port1', 'vrf': 'CORP', 'vlan': 200, 'name': 'CORP-v200', 'zone-lower': 'corp', 'zone-lower-upper': 'CORP', 'zone-start': 'CORP-suffix', 'zone-end': 'zone-CORP', 'zone-middle': 'zone-corp-suffix', 'mtu': 1500, 'vrrp-priority': 95, 'vrrp-dst': "'2.2.2.2'"}]}
 
         #print(renderedTemplate)
 

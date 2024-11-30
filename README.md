@@ -75,7 +75,8 @@ A JSON template source must define 3 fields:
 1. The template `version`
 1. The `template` body
 
-A template can optionally define the `imports` field that defines the names of templates that will be used when rendering.
+A template can optionally define the `imports` field that defines the names of templates that will be used when rendering.  The `imports` field can be
+left as an empty list if not imports are required.
 
 The basic structure is:
 
@@ -98,7 +99,7 @@ The basic structure is:
 
 Using the `DefaultTemplateDefinition` a variable can be defined using double curly braces surrounding the variable.
 
-In a JSON template the variable will be defined as the value of a key in a `dict` or simply as a value in a list.  The variable should be defined as a `str` and therefore enclosed in quotes.
+In a JSON template the variable will be defined as the value of a key in a `dict` or simply as a value in a list.  The variable should be defined as a `str` and therefore enclosed in quotes.  During the rendering of a template, any variable replacements will take on the type returned from the variable.
 
 Examples:
 
@@ -107,7 +108,8 @@ Examples:
 "template" : {
     ...
     "ip" : "{{ip}}",
-    "users" : [ "root", "{{readOnlyUser}}" ]
+    "users" : [ "root", "{{readOnlyUser}}" ],
+    "max-login-failures" : "{{maxLoginFailures}}"
     ...
 }
 ```
@@ -115,7 +117,7 @@ Examples:
 To render the variables we can pass in named arguments to `render()` like below:
 
 ```python
-template.render(ip='192.168.1.100', readOnlyUser='ro-user')
+template.render(ip='192.168.1.100', readOnlyUser='ro-user', maxLoginFailures=3)
 ```
 
 # Template Control Structures
@@ -204,7 +206,9 @@ Additionally, the for loop defined above can also specify `kwargs` (keyword argu
 }
 ```
 
-The above example uses "kwargs" that are specified in an imported template called "Variable Definition".  The "xpath" specified for each kwarg should begin with `$` for the root object of the template with each str index specified without any quotes.  The variable xpath should NOT contain the `$_set` keyword.  The "Variable Definition" template could look like the below:
+The above example uses "kwargs" that are specified in an imported template called "Variable Definition".  The "xpath" specified for each kwarg should begin with `$` for the root object of the template with each str index specified without any quotes.  The variable xpath should NOT contain the `$_set` keyword.
+
+The "Variable Definition" template could look like the below:
 
 ```json
 {
@@ -229,7 +233,19 @@ The above example uses "kwargs" that are specified in an imported template calle
 
 It should be noted that a kwarg should be an immediate child under the `$_set` dict however the `$_set` keyword can exist anywhere throughout a template.  In a function receiving the kwargs the name of the index is the name used for each kwarg.  Each kwarg specifies a single property called `value`.
 
+An example function that would make use of the variables would look like:
 
+```python
+def getFromDatabase(self, xpath : str, flatternedTemplate : dict, *args, **kwargs) -> any:
+
+    var1 = kwargs['var1']
+    var2 = kwargs['var1']
+    var3 = kwargs['var1']
+    var4 = kwargs['var1']
+    foo = kwargs['foo']
+
+    ...
+```
 
 
 

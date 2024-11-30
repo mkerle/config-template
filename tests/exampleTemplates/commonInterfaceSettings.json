@@ -6,6 +6,11 @@
         "vrf" : "{{settings.getVRF}}",
         "vlan" : "{{settings.getVlan}}",
         "name" : "{{settings.getInterfaceName}}",
+        "zone-lower" : "{{settings.getInterfaceZoneName|lower}}",
+        "zone-lower-upper" : "{{settings.getInterfaceZoneName|lower|upper}}",
+        "zone-start" : "{{settings.getInterfaceZoneName}}-suffix",
+        "zone-end" : "zone-{{settings.getInterfaceZoneName}}",
+        "zone-middle" : "zone-{{settings.getInterfaceZoneName|lower}}-suffix",
         "mtu" : 1500,
         "vrrp-priority" : "{% if settings.isPrimary then 100 else 95 %}",
         "vrrp-dst" : "{% if settings.isPrimary then '1.1.1.1' else '2.2.2.2' %}"

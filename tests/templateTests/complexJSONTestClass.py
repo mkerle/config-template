@@ -23,11 +23,11 @@ class DeviceSettings(object):
         
         return flatternedTemplate[interfacePropertyXpath]
     
-    def getInterfaceZoneName(self, xpath : str, flatternedTemplate : dict) -> str:
+    def getInterfaceZoneName(self, xpath : str, flatternedTemplate : dict, *args, **kwargs) -> str:
 
         return self.getInterfaceTemplateSettings(xpath, 'zone', flatternedTemplate)
     
-    def getInterfaceNetworkIndex(self, xpath : str, flatternedTemplate : dict) -> int:
+    def getInterfaceNetworkIndex(self, xpath : str, flatternedTemplate : dict, *args, **kwargs) -> int:
 
         return self.getInterfaceTemplateSettings(xpath, 'network-index', flatternedTemplate)
 

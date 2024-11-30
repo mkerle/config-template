@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 import re
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 class AbstractTemplateDefinition(ABC):
 
@@ -108,36 +108,56 @@ class AbstractTemplateDefinition(ABC):
     def hasTemplateVariable(self, s : str) -> bool:
 
         if (type(s) == str):
-            return s.strip().startswith(self.getVariableStart()) and s.strip().endswith(self.getVariableEnd())
+            try:
+                variableStartIndex = s.index(self.getVariableStart())
+            except:
+                return False
+
+            try:
+                variableEndIndex = s.index(self.getVariableEnd(), variableStartIndex)
+            except:
+                return False
+            
+            # should be True if get to this point anyway
+            return variableEndIndex > variableStartIndex
         
         return False
 
     def hasTemplateVariableModifier(self, s : str) -> bool:
+        
+        return self.getVariableModifier() in s
+        
 
-        if (self.hasTemplateVariable(s)):
-            return '|' in s
-
-        return False
-
-    def getTemplateVariableParts(self, s : str) -> Tuple[str, list[str]]:
+    def getTemplateVariableParts(self, s : str) -> Tuple[str, List[str], str]:
         '''
         Takes a str representing a template variable and returns the name of
-        the variable and a `list` of any modifiers. e.g. {{data.getName|lower}}
+        the variable and a `List` of any modifiers. e.g. {{data.getName|lower}}
         will return a `Tuple` of `('data.getName, ['lower'])`
         '''
 
         if (self.hasTemplateVariable(s)):
+            
+            try:
+                variableStartIndex = s.index(self.getVariableStart())
+            except:
+                return None, None, None
 
-            var = s.strip()[2:-2].strip()
+            try:
+                variableEndIndex = s.index(self.getVariableEnd(), variableStartIndex)
+            except:
+                return None, None, None
+            
+            var = s[variableStartIndex+len(self.getVariableStart()):variableEndIndex]
+            varStr = s[variableStartIndex:variableEndIndex+len(self.getVariableEnd())]
 
-            if (self.hasTemplateVariableModifier(s)):
+            if (self.hasTemplateVariableModifier(var)):
 
-                varParts = var.split('|')
-                return varParts[0], varParts[1:]
+                varParts = var.split(self.getVariableModifier())
+                return varParts[0], varParts[1:], varStr
 
-            return var, []
+            return var, [], varStr
 
-        return None, None
+        return None, None, None
     
     def hasTemplateControlStructure(self, s : str) -> bool:
 
@@ -234,7 +254,7 @@ class AbstractTemplateDefinition(ABC):
 
         return None, None
     
-    def getImportControlStructureImportList(self, s : str) -> list:
+    def getImportControlStructureImportList(self, s : str) -> List[str]:
 
         match = re.match(self._getControlStructureImportRegex(), s)
 

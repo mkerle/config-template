@@ -5,7 +5,7 @@ from configTemplate.template.jsonTemplateDefinition import JSONTemplateDefinitio
 
 import copy
 import logging
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 class JSONConfigTemplate(AbstractConfigTemplate):
 
@@ -72,7 +72,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         callbackRetObj[xpath] = obj[index]
         return callbackRetObj
 
-    def _loopCallbackMerge(self, *args, **kwargs) -> list:
+    def _loopCallbackMerge(self, *args, **kwargs) -> List:
 
         if ('loopData' not in kwargs):
             raise Exception('Expected to find "loopData" in kwargs but it was not found.')
@@ -95,7 +95,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         raise Exception('kwargs["loopData"] was expected to be of type list.  Instead found type=%s' % (str(type(mergeData))))
 
-    def _resolveImports(self, mergeData : Union[dict, list], origData : Union[dict, list]) -> Union[dict, list]:
+    def _resolveImports(self, mergeData : Union[dict, List], origData : Union[dict, List]) -> Union[dict, List]:
         '''
         This method will return origData with all import statements replaced 
         with the imported template content.
@@ -174,9 +174,9 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         return origData
     
-    def _parseForLoopKeywordArguments(self, keywordArgs : list[dict]) -> list:
+    def _parseForLoopKeywordArguments(self, keywordArgs : List[dict]) -> List:
         '''
-        The keywordArgs `list` (kwargs) specified in the for loop control structure
+        The keywordArgs `List` (kwargs) specified in the for loop control structure
         need some parsing on the xpath to ensure that it is formatted correctly.
         This parsing and formating is required to simplify the syntax used in 
         the template to avoid escaping of quotes etc.
@@ -225,7 +225,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
         return keywordArgs
     
-    def _resolveControlStructures(self, mergeData : Union[dict, list], origData : Union[dict, list], *args, **kwargs) -> Union[dict, list]:
+    def _resolveControlStructures(self, mergeData : Union[dict, List], origData : Union[dict, List], *args, **kwargs) -> Union[dict, List]:
         '''
         This method will return origData with all control structure statements 
         executed and replaced with template data content.
@@ -258,7 +258,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                     
                     if (self.getTemplateDefinition().hasTemplateVariable(dataSrcVariable)):
                         localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
-                        dataSrcVariable, modifiers = self.getTemplateDefinition().getTemplateVariableParts(dataSrcVariable)
+                        dataSrcVariable, modifiers, varStr = self.getTemplateDefinition().getTemplateVariableParts(dataSrcVariable)
                         dataSrc = self._evaluateVariable(dataSrcVariable, modifiers, '$', localFlatternedTemplate, *args, **kwargs)
                     else:
                         dataSrc = eval(dataSrcVariable)
@@ -330,7 +330,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                                 dataSrcKwargs[self.variableAssignments[cacheKey]['name']] = self.variableAssignments[cacheKey]['value']
 
                         localFlatternedTemplate = self.flatternResolvedTemplate(mergeData)
-                        dataSrcVariable, modifiers = self.getTemplateDefinition().getTemplateVariableParts(dataSrcVariable)
+                        dataSrcVariable, modifiers, varStr = self.getTemplateDefinition().getTemplateVariableParts(dataSrcVariable)
                         dataSrc = self._evaluateVariable(dataSrcVariable, modifiers, '$', localFlatternedTemplate, *args, **kwargs, **dataSrcKwargs)
                     else:
                         dataSrc = eval(dataSrcVariable)
@@ -458,7 +458,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
         else:
             raise Exception('Variable "%s" is not supported - too many levels' % (templateVariableName))
         
-    def _evaluateVariable(self, templateVariableName : str, modifiers : list[str], xpath : str, flatternedTemplate : dict, *args, **kwargs) -> any:
+    def _evaluateVariable(self, templateVariableName : str, modifiers : List[str], xpath : str, flatternedTemplate : dict, *args, **kwargs) -> any:
 
         obj = self._getVariableFromArgs(templateVariableName, *args, **kwargs)
 
@@ -469,7 +469,7 @@ class JSONConfigTemplate(AbstractConfigTemplate):
             else:
                 raise Exception('_evaluateVariable() -> Error! Invalid modifier given: %s.  variable name: %s' % (modifier, templateVariableName))
 
-        if (callable(obj)):                            
+        if (callable(obj)):
             return eval('obj(xpath, flatternedTemplate, *args, **kwargs)%s' % (parsedModifiers))
         else:
             if (type(obj) is str):
@@ -515,8 +515,12 @@ class JSONConfigTemplate(AbstractConfigTemplate):
                                     retVal = self.getTemplateDefinition().getIfControlStructureReturnFalse(val)                            
 
                                 if (self.getTemplateDefinition().hasTemplateVariable(retVal)):
-                                    retValVariable, modifiers = self.getTemplateDefinition().getTemplateVariableParts(retVal)
-                                    flatternedTemplate[xpath] = self._evaluateVariable(retValVariable, modifiers, xpath, flatternedTemplate, *args, **kwargs)
+                                    retValVariable, modifiers, varStr = self.getTemplateDefinition().getTemplateVariableParts(retVal)
+                                    evalValue = self._evaluateVariable(retValVariable, modifiers, xpath, flatternedTemplate, *args, **kwargs)
+                                    if (type(evalValue) == str):
+                                        flatternedTemplate[xpath] = val.replace(varStr, evalValue)
+                                    else:
+                                        flatternedTemplate[xpath] = evalValue
                                 else:
                                     flatternedTemplate[xpath] = retVal
                             
@@ -525,9 +529,12 @@ class JSONConfigTemplate(AbstractConfigTemplate):
 
                     elif (self.getTemplateDefinition().hasTemplateVariable(val)):
                         
-                        parsedValue, modifiers = self.getTemplateDefinition().getTemplateVariableParts(val)
-                        flatternedTemplate[xpath] = self._evaluateVariable(parsedValue, modifiers, xpath, flatternedTemplate, *args, **kwargs)
-
+                        parsedValue, modifiers, varStr = self.getTemplateDefinition().getTemplateVariableParts(val)
+                        evalValue = self._evaluateVariable(parsedValue, modifiers, xpath, flatternedTemplate, *args, **kwargs)
+                        if (type(evalValue) == str):
+                            flatternedTemplate[xpath] = val.replace(varStr, evalValue)
+                        else:
+                            flatternedTemplate[xpath] = evalValue
 
                         
             variableLevel += 1

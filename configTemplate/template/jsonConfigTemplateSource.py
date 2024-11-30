@@ -1,5 +1,7 @@
 from configTemplate.template.abstractConfigTemplateSource import AbstractConfigTemplateSource
 
+from typing import List
+
 class JSONConfigTemplateSource(AbstractConfigTemplateSource):
 
     FIELD_TEMPLATE_NAME = 'name'
@@ -84,7 +86,7 @@ class JSONConfigTemplateSource(AbstractConfigTemplateSource):
         
         raise Exception('No template data defined!')
     
-    def _getTemplateImports(templateObj : dict) -> list:
+    def _getTemplateImports(templateObj : dict) -> List[dict]:
 
         if (JSONConfigTemplateSource._hasTemplateImports(templateObj)):
             return templateObj[JSONConfigTemplateSource.FIELD_TEMPLATE_IMPORTS]

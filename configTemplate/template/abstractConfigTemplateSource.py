@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from configTemplate.template.abstractTemplateDefinition import AbstractTemplateDefinition
 
+from typing import List
+
 class AbstractConfigTemplateSource(ABC):
 
     def __init__(self, 
@@ -30,11 +32,11 @@ class AbstractConfigTemplateSource(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def getTemplateImports(self) -> list:
+    def getTemplateImports(self) -> List[dict]:
         '''
-        Returns a list of the inherited templates for the template source.
-        Each element of the list is a dict.
-        e.g [ { 'name' : 'My Template name' } ]
+        Returns a `List` of the inherited templates for the template source.
+        Each element of the `List` is a `dict`.
+        e.g `[ { 'name' : 'My Template name' } ]`
         '''
         raise NotImplementedError
     

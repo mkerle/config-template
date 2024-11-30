@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 import re
 
 from configTemplate.template.defaultTemplateDefinition import DefaultTemplateDefinition
@@ -11,7 +11,7 @@ class JSONTemplateDefinition(DefaultTemplateDefinition):
     def __init__(self):
         super().__init__()
 
-    def getTypeOfControlStructure(self, var : Union[str, list]) -> Union[str, None]:        
+    def getTypeOfControlStructure(self, var : Union[str, List]) -> Union[str, None]:        
 
         if (type(var) == list):
             
@@ -24,7 +24,7 @@ class JSONTemplateDefinition(DefaultTemplateDefinition):
 
         return super().getTypeOfControlStructure(var)
 
-    def getForListControlStructureCode(self, var : list) -> Tuple[str, str, any]:
+    def getForListControlStructureCode(self, var : List) -> Tuple[str, str, any]:
 
         if (self.getTypeOfControlStructure(var) == self.CONTROL_STRUCTURE_TYPE_FOR):
 
