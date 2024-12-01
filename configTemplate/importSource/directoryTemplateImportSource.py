@@ -27,9 +27,7 @@ class DirectoryTemplateImportSource(AbstractTemplateImportSource):
             try:                
                 return self.factoryMethod.createTemplateSource(templateFilePath)
             except:
-                Exception('An error occured getting template! Path: [%s]' % (templateFilePath))
-
-        logging.warning('DirectoryTemplateImportSource._getTemplateFromFilePath() -> Could not find template at path [%s]' % (templateFilePath))
+                Exception('An error occured getting template! Path: [%s]' % (templateFilePath))        
 
         return None
     
